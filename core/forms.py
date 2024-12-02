@@ -159,6 +159,20 @@ class UserSettingsForm(forms.ModelForm):
                 'placeholder': f'Enter your {field.label.lower()}'
             })
 
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            placeholder = field.label if field.label else field_name.replace('_', ' ').title()
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': f'Enter your {placeholder.lower()}'
+            })
+
 class UserProfileSettingsForm(forms.ModelForm):
     class Meta:
         model = UserProfile

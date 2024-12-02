@@ -13,7 +13,7 @@ from .models import UserProfile, Quest, Goal, Achievement, CommunityPost, UserQu
 from .forms import (
     UserRegistrationForm, UserProfileForm, QuestForm,
     GoalForm, CommunityPostForm, UserSettingsForm, UserProfileSettingsForm, 
-    UserProfileEditForm, CommentForm, ContactForm, ProfileEditForm
+    UserProfileEditForm, CommentForm, ContactForm, ProfileEditForm, UserForm
 )
 from .services.ai_service import AIService
 
@@ -559,22 +559,48 @@ def profile(request):
 
 @login_required
 def settings(request):
-    if request.method == 'POST':
-        form = UserSettingsForm(request.POST, instance=request.user)
-        profile_form = UserProfileSettingsForm(request.POST, request.FILES, instance=request.user.userprofile)
-        if form.is_valid() and profile_form.is_valid():
-            form.save()
-            profile_form.save()
-            messages.success(request, 'Your settings have been updated successfully!')
-            return redirect('profile')
-    else:
-        form = UserSettingsForm(instance=request.user)
-        profile_form = UserProfileSettingsForm(instance=request.user.userprofile)
-    
-    context = {
-        'form': form,
-        'profile_form': profile_form,
+    user_form = None
+    profile_form = None
+    notifications = {
+        'quests': True,  # Default values, you can load these from user preferences
+        'achievements': True,
+        'community': False
     }
+    
+    if request.method == 'POST':
+        if 'user_form' in request.POST:
+            user_form = UserForm(request.POST, instance=request.user)
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, 'Account settings updated successfully!')
+                
+        elif 'profile_form' in request.POST:
+            profile_form = UserProfileForm(request.POST, request.FILES, instance=request.user.userprofile)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Profile settings updated successfully!')
+                
+        elif 'notification_form' in request.POST:
+            # Handle notification preferences
+            notifications = {
+                'quests': request.POST.get('email_quests') == 'on',
+                'achievements': request.POST.get('email_achievements') == 'on',
+                'community': request.POST.get('email_community') == 'on'
+            }
+            # Save notification preferences to user profile or separate model
+            messages.success(request, 'Notification preferences updated successfully!')
+            
+    if user_form is None:
+        user_form = UserForm(instance=request.user)
+    if profile_form is None:
+        profile_form = UserProfileForm(instance=request.user.userprofile)
+        
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'notifications': notifications
+    }
+    
     return render(request, 'core/settings.html', context)
 
 @login_required

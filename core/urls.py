@@ -14,6 +14,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('profile/settings/', views.settings, name='settings'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('profile/settings/', views.settings, name='settings'),
     
     # Quest URLs
     path('quests/', views.quest_list, name='quest_list'),
