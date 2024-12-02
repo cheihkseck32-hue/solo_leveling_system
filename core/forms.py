@@ -7,28 +7,56 @@ from .models import UserProfile, Quest, Goal, CommunityPost, Comment
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add form-control class to all fields
+        for field_name, field in self.fields.items():
+            placeholder = field.label if field.label else field_name.replace('_', ' ').title()
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': f'Enter your {placeholder.lower()}'
+            })
+
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ('name', 'personality_type')
+        fields = ('bio', 'avatar', 'personality_type')
         widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
             'personality_type': forms.Select(choices=UserProfile.PERSONALITY_CHOICES)
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if field.widget.__class__.__name__ != 'Select':
+                placeholder = field.label if field.label else field_name.replace('_', ' ').title()
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter your {placeholder.lower()}'
+                })
 
 class QuestForm(forms.ModelForm):
     class Meta:
         model = Quest
         fields = ['title', 'description', 'difficulty', 'deadline', 'goal']
         widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
             'deadline': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'difficulty': forms.Select(choices=Quest.DIFFICULTY_CHOICES),
-            'goal': forms.Select(attrs={'class': 'form-select'}),
+            'difficulty': forms.Select(choices=Quest.DIFFICULTY_CHOICES)
         }
-    
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -40,6 +68,14 @@ class QuestForm(forms.ModelForm):
         self.fields['difficulty'].help_text = "Higher difficulty = higher rewards"
         self.fields['deadline'].required = False
         self.fields['goal'].required = False
+
+        for field_name, field in self.fields.items():
+            if field.widget.__class__.__name__ not in ['Select', 'DateTimeInput']:
+                placeholder = field.label if field.label else field_name.replace('_', ' ').title()
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter {placeholder.lower()}'
+                })
 
 class GoalForm(forms.ModelForm):
     class Meta:
@@ -101,10 +137,27 @@ class CommunityPostForm(forms.ModelForm):
             'post_type': forms.Select(choices=CommunityPost.POST_TYPES)
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if field.widget.__class__.__name__ != 'Select':
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter your {field.label.lower()}'
+                })
+
 class UserSettingsForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': f'Enter your {field.label.lower()}'
+            })
 
 class UserProfileSettingsForm(forms.ModelForm):
     class Meta:
@@ -117,6 +170,15 @@ class UserProfileSettingsForm(forms.ModelForm):
                 'data-type': 'json'
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if field.widget.__class__.__name__ != 'Textarea' and field.widget.__class__.__name__ != 'TextInput':
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter your {field.label.lower()}'
+                })
 
     def clean_notification_preferences(self):
         data = self.cleaned_data['notification_preferences']
@@ -135,6 +197,15 @@ class UserProfileEditForm(forms.ModelForm):
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4})
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if field.widget.__class__.__name__ != 'Textarea':
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter your {field.label.lower()}'
+                })
 
 class ProfileEditForm(forms.ModelForm):
     name = forms.CharField(
@@ -197,8 +268,25 @@ class CommentForm(forms.ModelForm):
             'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write your comment...'})
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': f'Enter your {field.label.lower()}'
+            })
+
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=100)
     email = forms.EmailField()
     subject = forms.CharField(max_length=200)
     message = forms.CharField(widget=forms.Textarea(attrs={'rows': 5}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if field.widget.__class__.__name__ != 'Textarea':
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f'Enter your {field.label.lower()}'
+                })

@@ -1,12 +1,161 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Login - Solo Leveling System{% endblock %}
+{% block title %}Login - MaghrebQuest{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    min-height: calc(100vh - 200px);
+    background: linear-gradient(135deg, #1a1f2c 0%, #2d364c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-title {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--light-text);
+    font-size: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+.btn-login {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: var(--light-text);
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+    color: var(--secondary-color);
+}
+
+.error-message {
+    color: #ff4d4d;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.auth-divider::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.auth-divider span {
+    background: rgba(26, 31, 44, 0.5);
+    padding: 0 1rem;
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="auth-page">
+<div class="auth-container">
     <div class="auth-card">
-        <h2>Welcome Back, Hunter</h2>
-        <p class="auth-subtitle">Continue your journey to become stronger</p>
+        <div class="auth-header">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Continue your journey in MaghrebQuest</p>
+        </div>
 
         <form method="post" class="auth-form">
             {% csrf_token %}
@@ -27,37 +176,15 @@
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Login</button>
+            <button type="submit" class="btn btn-login">Sign In</button>
         </form>
 
-        <div class="auth-footer">
-            Don't have an account? <a href="{% url 'register' %}">Register here</a>
+        <div class="auth-divider">
+            <span>or</span>
         </div>
-    </div>
 
-    <div class="auth-features">
-        <h3>What's New?</h3>
-        <div class="feature-list">
-            <div class="feature-item">
-                <i class="fas fa-tasks"></i>
-                <h4>Daily Quests</h4>
-                <p>New challenges await your return</p>
-            </div>
-            <div class="feature-item">
-                <i class="fas fa-users"></i>
-                <h4>Community Updates</h4>
-                <p>See what other hunters have achieved</p>
-            </div>
-            <div class="feature-item">
-                <i class="fas fa-star"></i>
-                <h4>Special Events</h4>
-                <p>Participate in limited-time events</p>
-            </div>
-            <div class="feature-item">
-                <i class="fas fa-crown"></i>
-                <h4>Leaderboards</h4>
-                <p>Check your ranking among other hunters</p>
-            </div>
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{% url 'register' %}">Create Account</a></p>
         </div>
     </div>
 </div>
