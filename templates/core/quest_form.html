@@ -1,0 +1,167 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Create Quest - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Quest Creation Form -->
+        <div class="col-md-7">
+            <div class="card glass-morphism mb-4">
+                <div class="card-body">
+                    <h2 class="card-title glow-text mb-4">
+                        <i class="fas fa-scroll me-2"></i>Create New Quest
+                    </h2>
+                    
+                    <form method="post" class="quest-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Quest Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="error-message">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="error-message">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.difficulty.id_for_label }}" class="form-label">Difficulty Rank</label>
+                                    {{ form.difficulty }}
+                                    {% if form.difficulty.errors %}
+                                    <div class="error-message">{{ form.difficulty.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.required_level.id_for_label }}" class="form-label">Required Level</label>
+                                    {{ form.required_level }}
+                                    {% if form.required_level.errors %}
+                                    <div class="error-message">{{ form.required_level.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.reward_xp.id_for_label }}" class="form-label">XP Reward</label>
+                                    {{ form.reward_xp }}
+                                    {% if form.reward_xp.errors %}
+                                    <div class="error-message">{{ form.reward_xp.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.reward_coins.id_for_label }}" class="form-label">Coin Reward</label>
+                                    {{ form.reward_coins }}
+                                    {% if form.reward_coins.errors %}
+                                    <div class="error-message">{{ form.reward_coins.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.deadline.id_for_label }}" class="form-label">Deadline</label>
+                            {{ form.deadline }}
+                            {% if form.deadline.errors %}
+                            <div class="error-message">{{ form.deadline.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary shadow-pulse w-100">
+                            <i class="fas fa-plus-circle me-2"></i>Create Quest
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Quest Suggestions -->
+        <div class="col-md-5">
+            <div class="card glass-morphism">
+                <div class="card-body">
+                    <h3 class="card-title glow-text mb-4">
+                        <i class="fas fa-robot me-2"></i>AI Quest Suggestions
+                    </h3>
+                    
+                    {% if quest_suggestions %}
+                        <div class="quest-suggestions">
+                            {% for suggestion in quest_suggestions %}
+                                <div class="quest-suggestion mb-4 p-3 border border-primary rounded hover-rise" 
+                                     data-title="{{ suggestion.title }}"
+                                     data-description="{{ suggestion.description }}"
+                                     data-difficulty="{{ suggestion.difficulty }}"
+                                     data-reward-xp="{{ suggestion.reward_xp }}"
+                                     data-reward-coins="{{ suggestion.reward_coins }}"
+                                     data-required-level="{{ suggestion.required_level }}"
+                                     onclick="fillQuestForm(this)">
+                                    <h5 class="suggestion-title text-primary mb-2">{{ suggestion.title }}</h5>
+                                    <p class="suggestion-description mb-2">{{ suggestion.description }}</p>
+                                    <div class="suggestion-details d-flex justify-content-between text-muted">
+                                        <span>
+                                            <i class="fas fa-star me-1"></i>{{ suggestion.difficulty }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-trophy me-1"></i>XP: {{ suggestion.reward_xp }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-coins me-1"></i>{{ suggestion.reward_coins }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center py-4">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                            <p>Generating quest suggestions...</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillQuestForm(suggestionElement) {
+    // Get values from the suggestion
+    const title = suggestionElement.dataset.title;
+    const description = suggestionElement.dataset.description;
+    const difficulty = suggestionElement.dataset.difficulty;
+    const rewardXp = suggestionElement.dataset.rewardXp;
+    const rewardCoins = suggestionElement.dataset.rewardCoins;
+    const requiredLevel = suggestionElement.dataset.requiredLevel;
+
+    // Fill the form fields
+    document.querySelector('#id_title').value = title;
+    document.querySelector('#id_description').value = description;
+    document.querySelector('#id_difficulty').value = difficulty;
+    document.querySelector('#id_reward_xp').value = rewardXp;
+    document.querySelector('#id_reward_coins').value = rewardCoins;
+    document.querySelector('#id_required_level').value = requiredLevel;
+
+    // Add animation to show the form has been filled
+    const form = document.querySelector('.quest-form');
+    form.classList.add('form-filled');
+    setTimeout(() => form.classList.remove('form-filled'), 1000);
+}
+</script>
+{% endblock %}

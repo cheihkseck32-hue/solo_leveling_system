@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-lg glass-morphism">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Contact Us</h2>
+                    <p class="text-center mb-4">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Additional Contact Information -->
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-envelope fa-2x mb-3"></i>
+                            <h5>Email</h5>
+                            <p class="mb-0">support@sololeveling.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-2x mb-3"></i>
+                            <h5>Working Hours</h5>
+                            <p class="mb-0">Mon - Fri: 9AM - 5PM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-comments fa-2x mb-3"></i>
+                            <h5>Social Media</h5>
+                            <div class="social-links">
+                                <a href="#" class="text-primary me-2"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="text-primary me-2"><i class="fab fa-discord"></i></a>
+                                <a href="#" class="text-primary"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

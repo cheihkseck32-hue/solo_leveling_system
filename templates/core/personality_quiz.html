@@ -1,0 +1,159 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Personality Quiz - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="quiz-page">
+    <div class="quiz-card">
+        <h2>Discover Your Hunter Path</h2>
+        <p class="quiz-subtitle">Answer these questions to determine your strengths and weaknesses</p>
+
+        <form method="post" class="quiz-form">
+            {% csrf_token %}
+            
+            <div class="question-group">
+                <h3>Question 1</h3>
+                <p>When facing a challenge, you prefer to:</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="achiever">
+                        <span>Plan carefully and follow through systematically</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="explorer">
+                        <span>Try different approaches and learn from experience</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="socializer">
+                        <span>Seek advice and collaborate with others</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="competitor">
+                        <span>Push yourself to overcome it quickly</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-group">
+                <h3>Question 2</h3>
+                <p>Your ideal reward for completing a task is:</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="achiever">
+                        <span>Recognition of your accomplishment</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="explorer">
+                        <span>Learning something new</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="socializer">
+                        <span>Helping others succeed</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="competitor">
+                        <span>Being the best at it</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-group">
+                <h3>Question 3</h3>
+                <p>In a group setting, you typically:</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="achiever">
+                        <span>Focus on completing objectives efficiently</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="explorer">
+                        <span>Suggest creative solutions</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="socializer">
+                        <span>Ensure everyone is involved and heard</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="competitor">
+                        <span>Take the lead and set high standards</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-group">
+                <h3>Question 4</h3>
+                <p>Your preferred way of tracking progress is:</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="achiever">
+                        <span>Detailed checklists and milestones</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="explorer">
+                        <span>Flexible goals that can be adjusted</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="socializer">
+                        <span>Group feedback and discussions</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="competitor">
+                        <span>Comparing performance with others</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-group">
+                <h3>Question 5</h3>
+                <p>When you fail at something, you usually:</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="achiever">
+                        <span>Analyze what went wrong and make a better plan</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="explorer">
+                        <span>Try a completely different approach</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="socializer">
+                        <span>Seek support and advice from others</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="competitor">
+                        <span>Double your efforts to succeed next time</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">Discover Your Path</button>
+        </form>
+    </div>
+
+    <div class="path-preview">
+        <h3>Hunter Paths</h3>
+        <div class="path-grid">
+            <div class="path-card achiever">
+                <i class="fas fa-trophy"></i>
+                <h4>The Achiever</h4>
+                <p>Methodical, goal-oriented, and persistent</p>
+            </div>
+            <div class="path-card explorer">
+                <i class="fas fa-compass"></i>
+                <h4>The Explorer</h4>
+                <p>Creative, adaptable, and curious</p>
+            </div>
+            <div class="path-card socializer">
+                <i class="fas fa-users"></i>
+                <h4>The Socializer</h4>
+                <p>Empathetic, collaborative, and supportive</p>
+            </div>
+            <div class="path-card competitor">
+                <i class="fas fa-fire"></i>
+                <h4>The Competitor</h4>
+                <p>Driven, ambitious, and focused</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

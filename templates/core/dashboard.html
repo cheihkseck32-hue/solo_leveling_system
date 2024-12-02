@@ -1,0 +1,111 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- User Stats -->
+    <div class="stats-card">
+        <div class="user-level">
+            <div class="level-circle">
+                <span class="level-number">{{ profile.level }}</span>
+                <span class="level-text">Level</span>
+            </div>
+            <div class="xp-bar">
+                <div class="xp-progress" style="width: {{ xp_progress }}%"></div>
+                <span class="xp-text">{{ profile.experience }} / {{ required_xp }} XP</span>
+            </div>
+        </div>
+        
+        <div class="user-rank rank-{{ profile.rank }}">
+            <span class="rank-title">{{ profile.get_rank_display }}</span>
+            <span class="rank-subtitle">Hunter Rank</span>
+        </div>
+        
+        <div class="user-stats">
+            <div class="stat">
+                <i class="fas fa-coins"></i>
+                <span>{{ profile.coins }}</span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-trophy"></i>
+                <span>{{ profile.achievements.count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Progress -->
+    <div class="progress-card">
+        <h3>Daily Progress</h3>
+        <div class="daily-progress">
+            <div class="progress-bar">
+                <div class="progress" style="width: {{ daily_progress }}%"></div>
+            </div>
+            <span class="progress-text">{{ daily_completed }} / {{ daily_total }} Quests</span>
+        </div>
+    </div>
+
+    <!-- Active Quests -->
+    <div class="quests-section">
+        <div class="section-header">
+            <h3>Active Quests</h3>
+            <a href="{% url 'quest_create' %}" class="btn btn-primary">New Quest</a>
+        </div>
+        
+        <div class="quest-grid">
+            {% for quest in active_quests %}
+            <div class="quest-card rank-{{ quest.difficulty }}">
+                <div class="quest-header">
+                    <span class="quest-rank">{{ quest.get_difficulty_display }}</span>
+                    <span class="quest-reward">
+                        <i class="fas fa-star"></i> {{ quest.xp_reward }} XP
+                    </span>
+                </div>
+                
+                <h4 class="quest-title">{{ quest.name }}</h4>
+                <p class="quest-description">{{ quest.description }}</p>
+                
+                <div class="quest-footer">
+                    <span class="quest-duration">
+                        <i class="fas fa-clock"></i> {{ quest.duration_hours }}h
+                    </span>
+                    <a href="{% url 'quest_complete' quest.id %}" class="btn btn-success">Complete</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-scroll"></i>
+                <p>No active quests. Create a new quest to begin your journey!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Achievements -->
+    <div class="achievements-section">
+        <h3>Recent Achievements</h3>
+        <div class="achievement-list">
+            {% for achievement in profile.achievements.all|slice:":5" %}
+            <div class="achievement-card">
+                <div class="achievement-icon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="achievement-info">
+                    <h4>{{ achievement.name }}</h4>
+                    <p>{{ achievement.description }}</p>
+                </div>
+                <div class="achievement-reward">
+                    <span><i class="fas fa-star"></i> {{ achievement.xp_reward }}</span>
+                    <span><i class="fas fa-coins"></i> {{ achievement.coin_reward }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-trophy"></i>
+                <p>Complete quests to earn achievements!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

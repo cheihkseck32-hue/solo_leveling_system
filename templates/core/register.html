@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Register - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <h2>Begin Your Journey</h2>
+        <p class="auth-subtitle">Create your account to start leveling up</p>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <div class="error-message">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <div class="error-message">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                <div class="error-message">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                <div class="error-message">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ profile_form.name.id_for_label }}">Display Name</label>
+                {{ profile_form.name }}
+                {% if profile_form.name.errors %}
+                <div class="error-message">{{ profile_form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ profile_form.personality_type.id_for_label }}">Choose Your Path</label>
+                {{ profile_form.personality_type }}
+                {% if profile_form.personality_type.errors %}
+                <div class="error-message">{{ profile_form.personality_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
+
+    <div class="auth-features">
+        <h3>Why Join Us?</h3>
+        <div class="feature-list">
+            <div class="feature-item">
+                <i class="fas fa-gamepad"></i>
+                <h4>Gamified Experience</h4>
+                <p>Turn your daily tasks into exciting quests</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-chart-line"></i>
+                <h4>Track Progress</h4>
+                <p>Watch yourself grow stronger with each completed task</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-trophy"></i>
+                <h4>Earn Achievements</h4>
+                <p>Unlock special rewards and titles</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-users"></i>
+                <h4>Join Community</h4>
+                <p>Connect with other hunters on the same path</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create New Quest - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Create New Quest</h3>
+                <a href="{% url 'quest_list' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Quests
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.difficulty|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.deadline|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.reward_xp|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.reward_coins|as_crispy_field }}
+                        </div>
+                        {% if form.required_level %}
+                        <div class="col-md-6 mb-3">
+                            {{ form.required_level|as_crispy_field }}
+                        </div>
+                        {% endif %}
+                        {% if form.tasks %}
+                        <div class="col-md-12 mb-3">
+                            {{ form.tasks|as_crispy_field }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create Quest
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-info-circle me-2"></i>Difficulty Levels</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-star text-warning me-2"></i>Easy - Simple, quick tasks</li>
+                            <li><i class="fas fa-star text-warning me-2"></i><i class="fas fa-star text-warning me-2"></i>Medium - Moderate effort required</li>
+                            <li><i class="fas fa-star text-warning me-2"></i><i class="fas fa-star text-warning me-2"></i><i class="fas fa-star text-warning me-2"></i>Hard - Challenging, time-consuming tasks</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-trophy me-2"></i>Rewards</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-arrow-up text-success me-2"></i>XP helps you level up</li>
+                            <li><i class="fas fa-coins text-warning me-2"></i>Coins can be used in the shop</li>
+                            <li><i class="fas fa-medal text-info me-2"></i>Complete quests to earn achievements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling for date picker */
+    input[type="date"] {
+        background-color: var(--darker-bg);
+        color: var(--light-text);
+        border: 1px solid var(--secondary-color);
+        border-radius: 0.25rem;
+    }
+    
+    /* Custom styling for select dropdowns */
+    select {
+        background-color: var(--darker-bg) !important;
+        color: var(--light-text) !important;
+        border: 1px solid var(--secondary-color) !important;
+    }
+    
+    select option {
+        background-color: var(--darker-bg);
+        color: var(--light-text);
+    }
+    
+    /* Custom styling for number inputs */
+    input[type="number"] {
+        background-color: var(--darker-bg);
+        color: var(--light-text);
+        border: 1px solid var(--secondary-color);
+    }
+</style>
+{% endblock %}

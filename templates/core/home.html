@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Welcome to Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Level Up Your Life</h1>
+        <p class="hero-subtitle">Transform your daily tasks into epic quests and rise through the ranks</p>
+        
+        {% if not user.is_authenticated %}
+        <div class="hero-actions">
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Start Your Journey</a>
+            <a href="{% url 'login' %}" class="btn btn-outline btn-lg">Continue Quest</a>
+        </div>
+        {% else %}
+        <div class="hero-actions">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Enter Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fas fa-tasks feature-icon"></i>
+            <h3>Quest System</h3>
+            <p>Transform your tasks into epic quests with rewards</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-level-up-alt feature-icon"></i>
+            <h3>Level System</h3>
+            <p>Gain experience and level up as you complete tasks</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-crown feature-icon"></i>
+            <h3>Rank System</h3>
+            <p>Rise through ranks from E to S class</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-users feature-icon"></i>
+            <h3>Community</h3>
+            <p>Share achievements and compete with others</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Login - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <h2>Welcome Back, Hunter</h2>
+        <p class="auth-subtitle">Continue your journey to become stronger</p>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <div class="error-message">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                <div class="error-message">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="{% url 'register' %}">Register here</a>
+        </div>
+    </div>
+
+    <div class="auth-features">
+        <h3>What's New?</h3>
+        <div class="feature-list">
+            <div class="feature-item">
+                <i class="fas fa-tasks"></i>
+                <h4>Daily Quests</h4>
+                <p>New challenges await your return</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-users"></i>
+                <h4>Community Updates</h4>
+                <p>See what other hunters have achieved</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-star"></i>
+                <h4>Special Events</h4>
+                <p>Participate in limited-time events</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-crown"></i>
+                <h4>Leaderboards</h4>
+                <p>Check your ranking among other hunters</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

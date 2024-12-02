@@ -1,0 +1,156 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Dashboard - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="row py-4">
+    <!-- User Stats Card -->
+    <div class="col-md-4 mb-4" data-aos="fade-right">
+        <div class="card card-hover">
+            <div class="card-header bg-gradient">
+                <h4 class="card-title mb-0 text-gradient">Hunter Status</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        {% if user.userprofile.avatar %}
+                            <img src="{{ user.userprofile.avatar.url }}" alt="Avatar" class="rounded-circle avatar-glow" style="width: 64px; height: 64px;">
+                        {% else %}
+                            <div class="rounded-circle bg-gradient d-flex align-items-center justify-content-center avatar-glow" style="width: 64px; height: 64px;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-0 text-gradient">{{ user.userprofile.name|default:user.username }}</h5>
+                        <p class="text-glow mb-0">Rank {{ user.userprofile.rank }} Hunter</p>
+                    </div>
+                </div>
+                
+                <!-- Level Progress -->
+                <div class="mb-3">
+                    <label class="form-label d-flex justify-content-between">
+                        <span class="text-glow">Level {{ user.userprofile.level }}</span>
+                        <span class="text-glow">XP: {{ user.userprofile.experience }}</span>
+                    </label>
+                    <div class="progress progress-glow">
+                        <div class="progress-bar bg-gradient" role="progressbar" style="width: 45%"></div>
+                    </div>
+                </div>
+
+                <!-- Coins -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-coins text-warning icon-glow me-2"></i>Coins</span>
+                    <span class="text-glow">{{ user.userprofile.coins }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Quests -->
+    <div class="col-md-8 mb-4" data-aos="fade-left">
+        <div class="card card-hover">
+            <div class="card-header bg-gradient d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0 text-gradient">Active Quests</h4>
+                <a href="{% url 'quest_create' %}" class="btn btn-primary btn-sm btn-glow">
+                    <i class="fas fa-plus me-1"></i>New Quest
+                </a>
+            </div>
+            <div class="card-body">
+                {% if active_quests %}
+                    <div class="list-group">
+                        {% for quest in active_quests %}
+                            <div class="list-group-item quest-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|multiply:100 }}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1 text-gradient">{{ quest.title }}</h5>
+                                    <small class="text-glow">Due: {{ quest.deadline|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1">{{ quest.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small>
+                                        <i class="fas fa-star text-warning icon-glow me-1"></i>{{ quest.difficulty }}
+                                        <i class="fas fa-coins text-warning icon-glow ms-3 me-1"></i>{{ quest.reward_coins }}
+                                        <i class="fas fa-trophy text-warning icon-glow ms-3 me-1"></i>{{ quest.reward_xp }} XP
+                                    </small>
+                                    <div class="btn-group">
+                                        <a href="{% url 'quest_complete' quest.id %}" class="btn btn-success btn-sm btn-glow">
+                                            <i class="fas fa-check me-1"></i>Complete
+                                        </a>
+                                        <a href="{% url 'quest_fail' quest.id %}" class="btn btn-danger btn-sm btn-glow">
+                                            <i class="fas fa-times me-1"></i>Fail
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4" data-aos="fade-up">
+                        <i class="fas fa-scroll fa-3x mb-3 text-muted icon-glow"></i>
+                        <p class="mb-0 text-glow">No active quests. Start a new quest to begin your journey!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Progress -->
+    <div class="col-md-6 mb-4" data-aos="fade-up">
+        <div class="card card-hover">
+            <div class="card-header bg-gradient">
+                <h4 class="card-title mb-0 text-gradient">Daily Progress</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h1 class="display-4 mb-3 text-gradient">{{ daily_completed }}</h1>
+                    <p class="text-glow">Quests completed today</p>
+                </div>
+                <div class="progress progress-glow mb-3">
+                    <div class="progress-bar bg-gradient" role="progressbar" style="width: {{ daily_completed|default:0|multiply:10 }}%" aria-valuenow="{{ daily_completed }}" aria-valuemin="0" aria-valuemax="10"></div>
+                </div>
+                <p class="text-center mb-0">
+                    {% if daily_completed >= 10 %}
+                        <span class="text-success text-glow"><i class="fas fa-check-circle icon-glow me-1"></i>Daily goal achieved!</span>
+                    {% else %}
+                        <span class="text-glow">{{ daily_completed }}/10 daily quests completed</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Achievements -->
+    <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="card card-hover">
+            <div class="card-header bg-gradient">
+                <h4 class="card-title mb-0 text-gradient">Recent Achievements</h4>
+            </div>
+            <div class="card-body">
+                {% if recent_achievements %}
+                    <div class="list-group">
+                        {% for achievement in recent_achievements %}
+                            <div class="list-group-item achievement-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|multiply:100 }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-trophy text-warning fa-2x icon-glow"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-0 text-gradient">{{ achievement.title }}</h5>
+                                        <small class="text-glow">{{ achievement.description }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4" data-aos="fade-up">
+                        <i class="fas fa-medal fa-3x mb-3 text-muted icon-glow"></i>
+                        <p class="mb-0 text-glow">Complete quests to earn achievements!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

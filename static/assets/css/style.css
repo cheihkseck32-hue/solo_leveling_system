@@ -1,0 +1,383 @@
+/* Solo Leveling Theme - Main Stylesheet */
+:root {
+    /* Main Colors */
+    --primary: #7c4dff;          /* Vibrant Purple */
+    --primary-dark: #5c35cc;     /* Dark Purple */
+    --primary-light: #9d71ff;    /* Light Purple */
+    --accent: #ff0080;           /* Neon Pink */
+    --background: #121212;       /* Dark Background */
+    --surface: #1e1e1e;          /* Surface Color */
+    --surface-light: #2d2d2d;    /* Lighter Surface */
+    --text: #ffffff;             /* White Text */
+    --text-secondary: #b3b3b3;   /* Secondary Text */
+    --success: #00e676;          /* Success Green */
+    --warning: #ffd600;          /* Warning Yellow */
+    --danger: #ff1744;           /* Danger Red */
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    --gradient-dark: linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
+    --gradient-glow: linear-gradient(45deg, var(--primary-light), var(--accent));
+}
+
+/* Global Styles */
+body {
+    background-color: var(--background);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Navbar */
+.navbar-glass {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(124, 77, 255, 0.1);
+}
+
+.navbar-brand {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Glass Morphism */
+.glass-morphism {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(124, 77, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Cards */
+.card {
+    background: var(--surface);
+    border: 1px solid rgba(124, 77, 255, 0.1);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(124, 77, 255, 0.1);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(124, 77, 255, 0.3);
+}
+
+/* Progress Bars */
+.progress {
+    background: var(--surface-light);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+}
+
+/* Hover Effects */
+.hover-glow {
+    transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+    color: var(--primary-light);
+    text-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+}
+
+.shadow-pulse {
+    animation: shadowPulse 2s infinite;
+}
+
+@keyframes shadowPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(124, 77, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(124, 77, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(124, 77, 255, 0);
+    }
+}
+
+/* Rank Badges */
+.rank-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+.rank-s { background: linear-gradient(135deg, #ff0080 0%, #7c4dff 100%); }
+.rank-a { background: linear-gradient(135deg, #7c4dff 0%, #0080ff 100%); }
+.rank-b { background: linear-gradient(135deg, #0080ff 0%, #00e676 100%); }
+.rank-c { background: linear-gradient(135deg, #00e676 0%, #ffd600 100%); }
+.rank-d { background: linear-gradient(135deg, #ffd600 0%, #ff1744 100%); }
+.rank-e { background: linear-gradient(135deg, #ff1744 0%, #d50000 100%); }
+
+/* Footer */
+.footer {
+    margin-top: auto;
+    background: var(--surface);
+    border-top: 1px solid rgba(124, 77, 255, 0.1);
+}
+
+.social-link {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin-left: 1rem;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    color: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-dark);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+/* Quest Suggestions Styles */
+.quest-suggestion {
+    background: rgba(124, 77, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.quest-suggestion:hover {
+    background: rgba(124, 77, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(124, 77, 255, 0.2);
+}
+
+.suggestion-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    background: linear-gradient(45deg, #7c4dff, #ff0080);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.suggestion-description {
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.suggestion-details {
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 0.5rem;
+}
+
+.form-filled {
+    animation: formFilled 1s ease;
+}
+
+@keyframes formFilled {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(124, 77, 255, 0);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(124, 77, 255, 0);
+    }
+}
+
+/* Quest Form Styles */
+.quest-form .form-control {
+    background: rgba(18, 18, 18, 0.8);
+    border: 1px solid rgba(124, 77, 255, 0.2);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.quest-form .form-control:focus {
+    background: rgba(18, 18, 18, 0.9);
+    border-color: #7c4dff;
+    box-shadow: 0 0 0 0.2rem rgba(124, 77, 255, 0.25);
+}
+
+.quest-form .form-label {
+    color: #e0e0e0;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.quest-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Goal Form Styles */
+.goal-form {
+    position: relative;
+}
+
+.goal-intro {
+    border-left: 4px solid #7c4dff;
+    padding-left: 1rem;
+    margin-bottom: 2rem;
+}
+
+.goal-intro .lead {
+    color: #e0e0e0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.goal-form .form-label {
+    color: #e0e0e0;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.goal-form .form-label i {
+    color: #7c4dff;
+    margin-right: 0.5rem;
+}
+
+.goal-form .form-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.goal-form .form-control {
+    background: rgba(18, 18, 18, 0.8);
+    border: 1px solid rgba(124, 77, 255, 0.2);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.goal-form .form-control:focus {
+    background: rgba(18, 18, 18, 0.9);
+    border-color: #7c4dff;
+    box-shadow: 0 0 0 0.2rem rgba(124, 77, 255, 0.25);
+}
+
+.goal-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.quest-preview {
+    background: rgba(124, 77, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 2rem 0;
+}
+
+.quest-preview h4 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.quest-preview-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.step:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #7c4dff, #ff0080);
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.step p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.error-message {
+    color: #ff4444;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 4px;
+}

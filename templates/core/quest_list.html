@@ -1,0 +1,121 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Quests - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="quest-page">
+    <div class="page-header">
+        <h2>Your Quests</h2>
+        <a href="{% url 'quest_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Quest
+        </a>
+    </div>
+
+    <div class="quest-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="in-progress">In Progress</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <div class="rank-filters">
+            <button class="rank-btn rank-E" data-rank="E">E</button>
+            <button class="rank-btn rank-D" data-rank="D">D</button>
+            <button class="rank-btn rank-C" data-rank="C">C</button>
+            <button class="rank-btn rank-B" data-rank="B">B</button>
+            <button class="rank-btn rank-A" data-rank="A">A</button>
+            <button class="rank-btn rank-S" data-rank="S">S</button>
+        </div>
+    </div>
+
+    <div class="quest-grid">
+        {% for quest in quests %}
+        <div class="quest-card rank-{{ quest.difficulty }} {% if quest.status == 'COMPLETED' %}completed{% endif %}">
+            <div class="quest-header">
+                <span class="quest-rank">{{ quest.get_difficulty_display }}</span>
+                <span class="quest-reward">
+                    <i class="fas fa-star"></i> {{ quest.xp_reward }} XP
+                    <i class="fas fa-coins"></i> {{ quest.coin_reward }}
+                </span>
+            </div>
+            
+            <h4 class="quest-title">{{ quest.name }}</h4>
+            <p class="quest-description">{{ quest.description }}</p>
+            
+            <div class="quest-meta">
+                <span class="quest-duration">
+                    <i class="fas fa-clock"></i> {{ quest.duration_hours }}h
+                </span>
+                <span class="quest-deadline">
+                    <i class="fas fa-calendar"></i> {{ quest.deadline|date:"M d, Y" }}
+                </span>
+            </div>
+            
+            <div class="quest-footer">
+                {% if quest.status != 'COMPLETED' %}
+                <a href="{% url 'quest_complete' quest.id %}" class="btn btn-success">
+                    Complete Quest
+                </a>
+                {% else %}
+                <span class="completion-date">
+                    Completed on {{ quest.completed_at|date:"M d, Y" }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-scroll"></i>
+            <h3>No Quests Found</h3>
+            <p>Create your first quest to begin your journey!</p>
+            <a href="{% url 'quest_create' %}" class="btn btn-primary">Create Quest</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter buttons functionality
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const rankBtns = document.querySelectorAll('.rank-btn');
+    const questCards = document.querySelectorAll('.quest-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active class from all buttons
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.dataset.filter;
+            questCards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else if (filter === 'completed') {
+                    card.style.display = card.classList.contains('completed') ? 'block' : 'none';
+                } else if (filter === 'in-progress') {
+                    card.style.display = !card.classList.contains('completed') ? 'block' : 'none';
+                }
+            });
+        });
+    });
+
+    rankBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            const activeRanks = Array.from(rankBtns)
+                .filter(b => b.classList.contains('active'))
+                .map(b => b.dataset.rank);
+
+            questCards.forEach(card => {
+                if (activeRanks.length === 0) {
+                    card.style.display = 'block';
+                } else {
+                    const cardRank = card.className.match(/rank-([A-Z])/)[1];
+                    card.style.display = activeRanks.includes(cardRank) ? 'block' : 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

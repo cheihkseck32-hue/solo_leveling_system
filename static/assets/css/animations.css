@@ -1,0 +1,273 @@
+/* Solo Leveling Animations */
+
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Level Up Effect */
+@keyframes levelUp {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.2);
+        filter: brightness(1.5);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.level-up {
+    animation: levelUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glow Pulse */
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 5px var(--primary-light);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--primary-light);
+    }
+    100% {
+        box-shadow: 0 0 5px var(--primary-light);
+    }
+}
+
+.glow-pulse {
+    animation: glowPulse 2s infinite;
+}
+
+/* Text Gradient */
+@keyframes textGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-text {
+    background: linear-gradient(270deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textGradient 3s linear infinite;
+}
+
+/* Quest Complete Shine */
+@keyframes shine {
+    0% {
+        background-position: -100% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.quest-complete {
+    position: relative;
+    overflow: hidden;
+}
+
+.quest-complete::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(124, 77, 255, 0.2),
+        transparent
+    );
+    animation: shine 1.5s linear infinite;
+}
+
+/* XP Gain Popup */
+@keyframes xpPopup {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        transform: translateY(-20px) scale(1.2);
+        opacity: 1;
+    }
+    80% {
+        transform: translateY(-40px) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-60px) scale(0.8);
+        opacity: 0;
+    }
+}
+
+.xp-popup {
+    position: fixed;
+    color: var(--primary);
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--primary-light);
+    pointer-events: none;
+    animation: xpPopup 1.5s ease-out forwards;
+}
+
+/* Shadow Monarch Effect */
+@keyframes shadowMonarch {
+    0% {
+        text-shadow: 0 0 10px var(--primary-light);
+        box-shadow: 0 0 10px var(--primary-light);
+    }
+    50% {
+        text-shadow: 0 0 20px var(--primary-light),
+                     0 0 30px var(--primary-light);
+        box-shadow: 0 0 20px var(--primary-light),
+                   0 0 30px var(--primary-light);
+    }
+    100% {
+        text-shadow: 0 0 10px var(--primary-light);
+        box-shadow: 0 0 10px var(--primary-light);
+    }
+}
+
+.shadow-monarch {
+    animation: shadowMonarch 3s infinite;
+}
+
+/* Power Surge */
+@keyframes powerSurge {
+    0% {
+        transform: scale(1);
+        filter: brightness(1) contrast(1);
+    }
+    50% {
+        transform: scale(1.05);
+        filter: brightness(1.2) contrast(1.1);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1) contrast(1);
+    }
+}
+
+.power-surge {
+    animation: powerSurge 2s infinite;
+}
+
+/* Hover Rise */
+.hover-rise {
+    transition: transform 0.3s ease;
+}
+
+.hover-rise:hover {
+    transform: translateY(-5px);
+}
+
+/* Floating Animation */
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.floating {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Scale Pulse */
+@keyframes scalePulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.scale-pulse {
+    animation: scalePulse 2s infinite;
+}
+
+/* Border Glow */
+@keyframes borderGlow {
+    0% {
+        border-color: var(--primary);
+        box-shadow: 0 0 5px var(--primary);
+    }
+    50% {
+        border-color: var(--accent);
+        box-shadow: 0 0 15px var(--accent);
+    }
+    100% {
+        border-color: var(--primary);
+        box-shadow: 0 0 5px var(--primary);
+    }
+}
+
+.border-glow {
+    animation: borderGlow 2s infinite;
+}
+
+/* Slide In */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Rotate Glow */
+@keyframes rotateGlow {
+    0% {
+        transform: rotate(0deg);
+        filter: hue-rotate(0deg) brightness(1);
+    }
+    100% {
+        transform: rotate(360deg);
+        filter: hue-rotate(360deg) brightness(1.2);
+    }
+}
+
+.rotate-glow {
+    animation: rotateGlow 3s linear infinite;
+}
