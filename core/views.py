@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
@@ -346,7 +346,19 @@ def store(request):
     items = ShopItem.objects.all()
     user_profile = request.user.userprofile
     
-    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    # Apply filters
+    category = request.GET.get('category')
+    rarity = request.GET.get('rarity')
+    item_type = request.GET.get('type')
+    
+    if category:
+        items = items.filter(category=category)
+    if rarity:
+        items = items.filter(rarity=rarity)
+    if item_type:
+        items = items.filter(item_type=item_type)
+    
+    if request.method == 'POST':
         item_id = request.POST.get('item_id')
         try:
             item = ShopItem.objects.get(id=item_id)
@@ -354,47 +366,73 @@ def store(request):
                 # Create the purchase transaction
                 user_profile.coins -= item.price
                 
+                # Apply stat increase immediately
+                if item.stat_type:
+                    current_stat = getattr(user_profile, item.stat_type)
+                    setattr(user_profile, item.stat_type, current_stat + item.stat_increase)
+                
                 # Add item to inventory
-                inventory = user_profile.inventory or []
-                inventory.append({
+                if not isinstance(user_profile.inventory, list):
+                    user_profile.inventory = []
+                    
+                user_profile.inventory.append({
                     'id': item.id,
                     'name': item.name,
                     'type': item.item_type,
                     'rarity': item.rarity,
-                    'effect': item.effect,
+                    'stat_type': item.stat_type,
+                    'stat_increase': item.stat_increase,
                     'icon': item.icon,
                     'equipped': False,
                     'purchased_at': timezone.now().isoformat()
                 })
-                user_profile.inventory = inventory
+                
+                # Save changes
                 user_profile.save()
                 
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Successfully purchased {item.name}!',
-                    'coins': user_profile.coins,
-                    'inventory': inventory
-                })
+                messages.success(request, f'Successfully purchased {item.name}! Your {item.get_stat_type_display()} increased by {item.stat_increase}!')
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Successfully purchased {item.name}! Your {item.get_stat_type_display()} increased by {item.stat_increase}!',
+                        'coins': user_profile.coins,
+                        'inventory': user_profile.inventory
+                    })
+                return redirect('store')
             else:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Not enough coins!'
+                    }, status=400)
+                messages.error(request, 'Not enough coins!')
+                return redirect('store')
+        except ShopItem.DoesNotExist:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': False,
-                    'message': 'Not enough coins!'
-                }, status=400)
-        except ShopItem.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'message': 'Item not found!'
-            }, status=404)
+                    'message': 'Item not found!'
+                }, status=404)
+            messages.error(request, 'Item not found!')
+            return redirect('store')
         except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': str(e)
-            }, status=500)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=500)
+            messages.error(request, f'Error: {str(e)}')
+            return redirect('store')
     
     context = {
         'items': items,
+        'user_profile': user_profile,
         'user_coins': user_profile.coins,
-        'inventory': user_profile.inventory or []
+        'inventory': user_profile.inventory or [],
+        'selected_category': category,
+        'selected_rarity': rarity,
+        'selected_type': item_type
     }
     return render(request, 'core/store.html', context)
 
@@ -650,6 +688,11 @@ def contact(request):
         'form': form,
     }
     return render(request, 'core/contact.html', context)
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have been successfully logged out!')
+    return redirect('home')
 
 # Helper Functions
 def analyze_personality(answers):

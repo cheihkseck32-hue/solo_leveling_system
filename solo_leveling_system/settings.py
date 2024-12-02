@@ -31,6 +31,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+SITE_NAME = 'MaghrebQuest'
+SITE_DESCRIPTION = 'Transform your journey with North African inspiration'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

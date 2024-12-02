@@ -32,22 +32,21 @@ class UserProfile(models.Model):
     name = models.CharField(max_length=100, default='Hunter')
     level = models.IntegerField(default=1)
     experience = models.IntegerField(default=0)
-    coins = models.IntegerField(default=0)
+    coins = models.IntegerField(default=100)  # Start with 100 coins
     rank = models.CharField(max_length=1, choices=RANK_CHOICES, default='F', validators=[validate_rank])
     personality_type = models.CharField(max_length=50, blank=True, null=True)
     title = models.CharField(max_length=100, default='Novice Hunter')
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    notification_preferences = models.JSONField(default=dict)
-    strengths = models.JSONField(default=dict)
-    weaknesses = models.JSONField(default=dict)
-    daily_quest_limit = models.PositiveIntegerField(
-        default=5,
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )
+    notification_preferences = models.JSONField(default=dict, blank=True, null=True)
+    strengths = models.JSONField(default=dict, blank=True, null=True)
+    weaknesses = models.JSONField(default=dict, blank=True, null=True)
+    daily_quest_limit = models.PositiveIntegerField(default=5)
     last_quest_completion = models.DateTimeField(null=True, blank=True)
     quest_streak = models.PositiveIntegerField(default=0)
-    inventory = models.JSONField(default=list, blank=True)
+    inventory = models.JSONField(default=list, blank=True, null=True)
+    
+    # Base stats
     strength = models.IntegerField(default=10)
     agility = models.IntegerField(default=10)
     vitality = models.IntegerField(default=10)
@@ -144,8 +143,57 @@ class UserProfile(models.Model):
             started_at__date=today
         ).count()
 
+    def get_total_stats(self):
+        """Calculate total stats including item effects."""
+        total_stats = {
+            'strength': self.strength,
+            'agility': self.agility,
+            'vitality': self.vitality,
+            'sense': self.sense,
+            'intelligence': self.intelligence,
+        }
+        
+        if self.inventory:
+            for item in self.inventory:
+                if item.get('stat_type') and item.get('stat_increase'):
+                    total_stats[item['stat_type']] += item['stat_increase']
+        
+        return total_stats
+
+    def get_stat_bonuses(self):
+        """Get bonuses from items for each stat."""
+        bonuses = {
+            'strength': 0,
+            'agility': 0,
+            'vitality': 0,
+            'sense': 0,
+            'intelligence': 0,
+        }
+        
+        if self.inventory:
+            for item in self.inventory:
+                if item.get('stat_type') and item.get('stat_increase'):
+                    bonuses[item['stat_type']] += item['stat_increase']
+        
+        return bonuses
+
     def add_item_to_inventory(self, item):
-        self.inventory.append(item)
+        """Add an item to inventory and apply its effects."""
+        if self.inventory is None:
+            self.inventory = []
+            
+        item_data = {
+            'id': item.id,
+            'name': item.name,
+            'type': item.item_type,
+            'rarity': item.rarity,
+            'stat_type': item.stat_type,
+            'stat_increase': item.stat_increase,
+            'icon': item.icon,
+            'purchased_at': timezone.now().isoformat()
+        }
+        
+        self.inventory.append(item_data)
         self.save()
 
     def update_stats_from_quest(self, quest_type):
@@ -162,24 +210,6 @@ class UserProfile(models.Model):
             if hasattr(self, stat):
                 setattr(self, stat, getattr(self, stat) + increase)
         self.save()
-
-    def get_total_stats(self):
-        """Calculate total stats including item effects."""
-        total_stats = {
-            'strength': self.strength,
-            'agility': self.agility,
-            'vitality': self.vitality,
-            'sense': self.sense,
-            'intelligence': self.intelligence,
-        }
-        
-        # Add effects from equipped items
-        for item in self.inventory:
-            for effect, value in item.get('effects', {}).items():
-                if effect in total_stats:
-                    total_stats[effect] += value
-        
-        return total_stats
 
     def get_equipped_items(self):
         """Retrieve equipped items from inventory."""
@@ -613,64 +643,53 @@ class Mode(models.Model):
         return self.name
 
 class ShopItem(models.Model):
-    ITEM_TYPES = [
-        ('CONSUMABLE', 'Consumable'),
-        ('EQUIPMENT', 'Equipment'),
-        ('WEAPON', 'Weapon'),
-    ]
-    
     RARITY_CHOICES = [
-        ('common', 'Common'),
-        ('uncommon', 'Uncommon'),
-        ('rare', 'Rare'),
-        ('epic', 'Epic'),
-        ('legendary', 'Legendary'),
+        ('COMMON', 'Common'),
+        ('UNCOMMON', 'Uncommon'),
+        ('RARE', 'Rare'),
+        ('EPIC', 'Epic'),
+        ('LEGENDARY', 'Legendary'),
     ]
     
-    STAT_TYPES = [
+    ITEM_TYPE_CHOICES = [
+        ('EQUIPMENT', 'Equipment'),
+        ('CONSUMABLE', 'Consumable'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('personal', 'Personal Development'),
+        ('career', 'Career'),
+        ('health', 'Health & Fitness'),
+        ('education', 'Education'),
+        ('financial', 'Financial'),
+        ('creative', 'Creative'),
+        ('social', 'Social'),
+        ('other', 'Other'),
+    ]
+
+    STAT_TYPE_CHOICES = [
         ('strength', 'Strength'),
         ('agility', 'Agility'),
         ('vitality', 'Vitality'),
         ('sense', 'Sense'),
         ('intelligence', 'Intelligence'),
     ]
-    
+
     name = models.CharField(max_length=100)
-    item_type = models.CharField(max_length=20, choices=ITEM_TYPES, default='CONSUMABLE')
-    rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
-    price = models.PositiveIntegerField()
-    description = models.TextField(blank=True)
-    stat_type = models.CharField(max_length=20, choices=STAT_TYPES, null=True, blank=True)
-    stat_increase = models.IntegerField(default=0)
+    description = models.TextField()
+    price = models.IntegerField(default=100)
+    rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='COMMON')
+    item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default='EQUIPMENT')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
+    stat_type = models.CharField(max_length=20, choices=STAT_TYPE_CHOICES, default='strength')
+    stat_increase = models.IntegerField(default=1)
     icon = models.CharField(max_length=50, default='box')
+    created_at = models.DateTimeField(default=timezone.now)
 
     def purchase(self, user_profile):
-        """Process item purchase and apply effects"""
         if user_profile.coins >= self.price:
-            # Deduct coins
             user_profile.coins -= self.price
-            
-            # Add stat increase if applicable
-            if self.stat_type and self.stat_increase > 0:
-                current_stat = getattr(user_profile, self.stat_type)
-                setattr(user_profile, self.stat_type, current_stat + self.stat_increase)
-            
-            # Add to inventory
-            inventory = user_profile.inventory or []
-            inventory.append({
-                'id': self.id,
-                'name': self.name,
-                'type': self.item_type,
-                'rarity': self.rarity,
-                'stat_type': self.stat_type,
-                'stat_increase': self.stat_increase,
-                'icon': self.icon,
-                'equipped': False,
-                'purchased_at': timezone.now().isoformat()
-            })
-            user_profile.inventory = inventory
-            
-            # Save changes
+            user_profile.add_item_to_inventory(self)
             user_profile.save()
             return True
         return False

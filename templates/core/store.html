@@ -1,169 +1,207 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Store - Solo Leveling System{% endblock %}
-
 {% block content %}
 <div class="container py-4">
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="text-light">Store</h1>
-                <div class="coins-display">
-                    <i class="fas fa-coins text-warning"></i>
-                    <span id="user-coins" class="ms-2">{{ user_coins }}</span>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark bg-opacity-75">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="text-light mb-0">Store</h2>
+                        <div>
+                            <i class="fas fa-coins text-warning me-2"></i>
+                            <span class="text-light">{{ user_profile.coins }} coins</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        {% for item in items %}
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card h-100 bg-dark bg-opacity-75 border border-light border-opacity-10">
-                <div class="card-header bg-transparent border-bottom border-light border-opacity-10">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-light">
-                            <i class="fas fa-{{ item.icon }} me-2"></i>
-                            {{ item.name }}
-                        </h5>
-                        <span class="badge bg-{{ item.rarity|lower }}">{{ item.get_rarity_display }}</span>
-                    </div>
-                </div>
+    <div class="row">
+        <!-- Filters -->
+        <div class="col-md-3">
+            <div class="card bg-dark bg-opacity-75 mb-4">
                 <div class="card-body">
-                    <p class="card-text text-light">{{ item.description }}</p>
-                    {% if item.stat_type %}
-                    <div class="stat-effect mb-3">
-                        <span class="text-light">
-                            <i class="fas fa-plus-circle text-success me-2"></i>
-                            {{ item.stat_increase }} {{ item.get_stat_type_display }}
-                        </span>
-                    </div>
-                    {% endif %}
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="text-warning">
-                            <i class="fas fa-coins me-2"></i>
-                            {{ item.price }}
-                        </span>
-                        <button class="btn btn-primary buy-item" data-item-id="{{ item.id }}"
-                                {% if user_coins < item.price %}disabled{% endif %}>
-                            {% if user_coins < item.price %}
-                                <i class="fas fa-lock me-2"></i>Not enough coins
-                            {% else %}
-                                <i class="fas fa-shopping-cart me-2"></i>Purchase
-                            {% endif %}
-                        </button>
-                    </div>
+                    <h5 class="text-light mb-3">Filters</h5>
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label class="form-label text-light">Category</label>
+                            <select class="form-select bg-dark text-light" name="category">
+                                <option value="">All Categories</option>
+                                <option value="personal" {% if selected_category == 'personal' %}selected{% endif %}>Personal Development</option>
+                                <option value="career" {% if selected_category == 'career' %}selected{% endif %}>Career</option>
+                                <option value="health" {% if selected_category == 'health' %}selected{% endif %}>Health & Fitness</option>
+                                <option value="education" {% if selected_category == 'education' %}selected{% endif %}>Education</option>
+                                <option value="financial" {% if selected_category == 'financial' %}selected{% endif %}>Financial</option>
+                                <option value="creative" {% if selected_category == 'creative' %}selected{% endif %}>Creative</option>
+                                <option value="social" {% if selected_category == 'social' %}selected{% endif %}>Social</option>
+                                <option value="other" {% if selected_category == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-light">Rarity</label>
+                            <select class="form-select bg-dark text-light" name="rarity">
+                                <option value="">All Rarities</option>
+                                <option value="COMMON" {% if selected_rarity == 'COMMON' %}selected{% endif %}>Common</option>
+                                <option value="UNCOMMON" {% if selected_rarity == 'UNCOMMON' %}selected{% endif %}>Uncommon</option>
+                                <option value="RARE" {% if selected_rarity == 'RARE' %}selected{% endif %}>Rare</option>
+                                <option value="EPIC" {% if selected_rarity == 'EPIC' %}selected{% endif %}>Epic</option>
+                                <option value="LEGENDARY" {% if selected_rarity == 'LEGENDARY' %}selected{% endif %}>Legendary</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-light">Type</label>
+                            <select class="form-select bg-dark text-light" name="type">
+                                <option value="">All Types</option>
+                                <option value="EQUIPMENT" {% if selected_type == 'EQUIPMENT' %}selected{% endif %}>Equipment</option>
+                                <option value="CONSUMABLE" {% if selected_type == 'CONSUMABLE' %}selected{% endif %}>Consumable</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
                 </div>
             </div>
         </div>
-        {% endfor %}
+
+        <!-- Items Grid -->
+        <div class="col-md-9">
+            <div class="row g-4">
+                {% for item in items %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card bg-dark bg-opacity-75 h-100 item-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <i class="fas fa-{{ item.icon }} fa-2x me-2 text-{{ item.rarity|lower }}"></i>
+                                    <h5 class="card-title text-light d-inline">{{ item.name }}</h5>
+                                </div>
+                                <span class="badge bg-{{ item.rarity|lower }}">{{ item.rarity }}</span>
+                            </div>
+                            
+                            <p class="card-text text-light mb-3">{{ item.description }}</p>
+                            
+                            <div class="stats-bonus mb-3">
+                                <span class="text-success">
+                                    <i class="fas fa-plus-circle me-1"></i>
+                                    +{{ item.stat_increase }} {{ item.stat_type|title }}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="price">
+                                    <i class="fas fa-coins text-warning"></i>
+                                    <span class="text-light">{{ item.price }}</span>
+                                </div>
+                                <form method="post" action="{% url 'purchase_item' item.id %}" class="purchase-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary purchase-btn" 
+                                            {% if user_profile.coins < item.price %}disabled{% endif %}>
+                                        {% if user_profile.coins < item.price %}
+                                            Not enough coins
+                                        {% else %}
+                                            Purchase
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
+.item-card {
+    transition: transform 0.2s;
+}
+
+.item-card:hover {
+    transform: translateY(-5px);
+}
+
 .bg-common { background-color: #808080 !important; }
 .bg-uncommon { background-color: #2ecc71 !important; }
 .bg-rare { background-color: #3498db !important; }
 .bg-epic { background-color: #9b59b6 !important; }
 .bg-legendary { background-color: #f1c40f !important; }
 
-.card {
-    transition: transform 0.2s;
-    backdrop-filter: blur(10px);
+.text-common { color: #808080 !important; }
+.text-uncommon { color: #2ecc71 !important; }
+.text-rare { color: #3498db !important; }
+.text-epic { color: #9b59b6 !important; }
+.text-legendary { color: #f1c40f !important; }
+
+.purchase-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.stat-effect {
-    padding: 0.5rem;
-    background: rgba(40, 167, 69, 0.1);
-    border-radius: 0.25rem;
-    border: 1px solid rgba(40, 167, 69, 0.2);
+.stats-bonus {
+    font-size: 0.9rem;
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const buyButtons = document.querySelectorAll('.buy-item');
-    const userCoinsDisplay = document.getElementById('user-coins');
-
-    buyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
+    const filterForm = document.getElementById('filterForm');
+    
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+        
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+    });
+    
+    const purchaseForms = document.querySelectorAll('.purchase-form');
+    
+    purchaseForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const button = form.querySelector('button');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Purchasing...';
             
-            fetch('/store/', {
+            fetch(form.action, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
                 },
-                body: `item_id=${itemId}`
+                body: new FormData(form)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update user's coins
-                    userCoinsDisplay.textContent = data.coins;
-                    
                     // Show success message
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000
-                    });
-
-                    // Update buttons based on new coin amount
-                    updateBuyButtons(data.coins);
+                    alert('Item purchased successfully!');
+                    // Update coins display
+                    document.querySelector('.coins-display').textContent = data.new_balance;
+                    // Reload page to update UI
+                    window.location.reload();
                 } else {
-                    throw new Error(data.message);
+                    alert(data.error || 'Failed to purchase item');
                 }
             })
             .catch(error => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: error.message,
-                    icon: 'error',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000
-                });
+                alert('An error occurred while purchasing the item');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = 'Purchase';
             });
         });
     });
-
-    function updateBuyButtons(userCoins) {
-        buyButtons.forEach(button => {
-            const price = parseInt(button.closest('.card-body').querySelector('.text-warning').textContent.trim());
-            if (userCoins < price) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-lock me-2"></i>Not enough coins';
-            }
-        });
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 });
 </script>
 {% endblock %}
