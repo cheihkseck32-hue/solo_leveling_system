@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h2>Delete Goal</h2>
+        </div>
+        <div class="card-body">
+            <p class="lead">Are you sure you want to delete the goal "{{ object.title }}"?</p>
+            <p class="text-muted">This will also delete all associated quests and progress.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    <a href="{% url 'goal_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

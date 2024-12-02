@@ -1,0 +1,218 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ goal.title }} - Goal Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'goal_list' %}">Goals</a></li>
+            <li class="breadcrumb-item active">{{ goal.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Goal Details Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card glass-morphism h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="card-title">{{ goal.title }}</h2>
+                        <span class="badge bg-primary">{{ goal.get_goal_type_display }}</span>
+                    </div>
+                    
+                    <p class="card-text text-muted mb-4">{{ goal.description }}</p>
+                    
+                    <div class="goal-progress mb-4">
+                        <h5 class="mb-3">Progress</h5>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {{ completion_percentage }}%"
+                                 aria-valuenow="{{ completion_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small class="text-muted">{{ completion_percentage }}% Complete</small>
+                            <small class="text-muted">{{ completed_quests }}/{{ total_quests }} Quests</small>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-stats">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="stat-card">
+                                    <i class="fas fa-tasks text-primary"></i>
+                                    <div>
+                                        <h6>Active Quests</h6>
+                                        <span>{{ active_quests }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-card">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <div>
+                                        <h6>Completed</h6>
+                                        <span>{{ completed_quests }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    
+                    <div class="goal-actions">
+                        <a href="{% url 'quest_create' %}?goal={{ goal.id }}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-plus-circle me-2"></i>Add New Quest
+                        </a>
+                        <div class="btn-group w-100">
+                            <a href="{% url 'goal_edit' goal.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </a>
+                            <a href="{% url 'goal_delete' goal.id %}" class="btn btn-outline-danger">
+                                <i class="fas fa-trash-alt me-1"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quests List -->
+        <div class="col-lg-8">
+            <div class="card glass-morphism">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="fas fa-scroll me-2"></i>Quests
+                    </h3>
+
+                    {% if quests %}
+                        <div class="quests-list">
+                            {% for quest in quests %}
+                                <div class="quest-card mb-3 {% if quest.status == 'completed' %}completed{% endif %}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h5 class="mb-1">{{ quest.title }}</h5>
+                                            <p class="mb-2 text-muted">{{ quest.description }}</p>
+                                            <div class="quest-meta">
+                                                <span class="me-3">
+                                                    <i class="fas fa-star text-warning me-1"></i>
+                                                    {{ quest.xp_reward }} XP
+                                                </span>
+                                                <span class="me-3">
+                                                    <i class="fas fa-coins text-warning me-1"></i>
+                                                    {{ quest.coin_reward }} Coins
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-calendar-alt text-info me-1"></i>
+                                                    {{ quest.deadline|date:"M d, Y" }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="quest-status">
+                                            {% if quest.status == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Completed
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-hourglass-half me-1"></i>In Progress
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-scroll fa-3x text-muted mb-3"></i>
+                                <h4>No Quests Yet</h4>
+                                <p class="text-muted">Start by adding your first quest to this goal!</p>
+                                <a href="{% url 'quest_create' %}?goal={{ goal.id }}" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-2"></i>Create First Quest
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card i {
+    font-size: 1.5rem;
+}
+
+.stat-card h6 {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.stat-card span {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.quest-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.quest-card:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.quest-card.completed {
+    opacity: 0.7;
+}
+
+.quest-meta {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.empty-state {
+    padding: 3rem;
+    background: rgba(124, 77, 255, 0.05);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.breadcrumb {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.breadcrumb-item a {
+    color: #7c4dff;
+    text-decoration: none;
+}
+
+.breadcrumb-item.active {
+    color: #aaa;
+}
+</style>
+{% endblock %}

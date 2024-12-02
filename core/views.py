@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.db.models import Sum
 import requests
 import json
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from .models import UserProfile, Quest, Goal, Achievement, CommunityPost, UserQuest
 from .forms import (
@@ -65,91 +66,169 @@ def personality_quiz(request):
 
 @login_required
 def dashboard(request):
-    user = request.user
-    profile = user.userprofile
+    user_profile = request.user.userprofile
     
-    # Get active quests
+    # Get user's goals and quests
+    goals = Goal.objects.filter(
+        user=request.user,
+        is_active=True
+    ).order_by('-priority', '-created_at')
+    
     active_quests = Quest.objects.filter(
-        user=user,
-        status='IN_PROGRESS'
-    ).order_by('deadline')
+        user=request.user, 
+        status='in_progress'
+    ).select_related('goal').order_by('-created_at')[:5]
     
-    # Get daily progress
-    daily_completed = UserQuest.objects.filter(
-        user=user,
-        completed=True,
-        completed_at__date=timezone.now().date()
-    ).count()
+    completed_quests = Quest.objects.filter(
+        user=request.user, 
+        status='completed',
+        completed_at__isnull=False
+    ).select_related('goal').order_by('-updated_at')[:5]
     
-    daily_total = profile.daily_quest_limit
-    daily_progress = (daily_completed / daily_total * 100) if daily_total > 0 else 0
+    # Calculate statistics
+    total_quests = Quest.objects.filter(user=request.user).count()
+    completed_quest_count = Quest.objects.filter(user=request.user, status='completed').count()
+    completion_rate = (completed_quest_count / total_quests * 100) if total_quests > 0 else 0
     
-    # Calculate XP progress
-    required_xp = profile.level * 100
-    xp_progress = (profile.experience / required_xp * 100) if required_xp > 0 else 0
+    # Get active goals with progress
+    active_goals = goals.filter(
+        is_active=True
+    ).exclude(
+        deadline__lt=timezone.now()
+    ).order_by('-priority', '-created_at')[:5]
     
-    return render(request, 'core/dashboard.html', {
-        'profile': profile,
+    context = {
+        'user_profile': user_profile,
         'active_quests': active_quests,
-        'daily_completed': daily_completed,
-        'daily_total': daily_total,
-        'daily_progress': daily_progress,
-        'xp_progress': xp_progress,
-        'required_xp': required_xp
-    })
+        'completed_quests': completed_quests,
+        'active_goals': active_goals,
+        'total_quests': total_quests,
+        'completed_quest_count': completed_quest_count,
+        'completion_rate': round(completion_rate, 1),
+        'xp_to_next_level': user_profile.xp_to_next_level(),
+    }
+    
+    return render(request, 'core/dashboard.html', context)
 
 @login_required
 def quest_list(request):
-    quests = Quest.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'core/quest_list.html', {'quests': quests})
+    # Start with all quests for the user
+    quests = Quest.objects.filter(user=request.user)
+    
+    # Get all active goals for the filter dropdown
+    goals = Goal.objects.filter(user=request.user, is_active=True)
+    
+    # Apply filters
+    status = request.GET.get('status')
+    if status:
+        quests = quests.filter(status=status)
+    
+    difficulty = request.GET.get('difficulty')
+    if difficulty:
+        quests = quests.filter(difficulty=int(difficulty))
+    
+    goal_id = request.GET.get('goal')
+    if goal_id:
+        quests = quests.filter(goal_id=goal_id)
+    
+    search = request.GET.get('search')
+    if search:
+        quests = quests.filter(title__icontains=search) | quests.filter(description__icontains=search)
+    
+    # Order quests
+    quests = quests.order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(quests, 9)  # Show 9 quests per page
+    page = request.GET.get('page')
+    try:
+        quests = paginator.page(page)
+    except PageNotAnInteger:
+        quests = paginator.page(1)
+    except EmptyPage:
+        quests = paginator.page(paginator.num_pages)
+    
+    context = {
+        'quests': quests,
+        'goals': goals,
+        'is_paginated': True if paginator.num_pages > 1 else False,
+        'page_obj': quests,
+        'now': timezone.now(),  # Add current time for deadline comparison
+    }
+    
+    return render(request, 'core/quest_list.html', context)
 
 @login_required
 def quest_create(request):
+    goal_id = request.GET.get('goal')
+    goal = None
+    if goal_id:
+        goal = get_object_or_404(Goal, id=goal_id, user=request.user)
+    
     if request.method == 'POST':
-        form = QuestForm(request.POST)
+        form = QuestForm(request.POST, user=request.user)
         if form.is_valid():
             quest = form.save(commit=False)
             quest.user = request.user
-            quest.calculate_rewards()
+            if goal:
+                quest.goal = goal
             quest.save()
-            messages.success(request, 'New quest created!')
+            
+            messages.success(request, 'Quest created successfully!')
+            if goal:
+                return redirect('goal_detail', goal_id=goal.id)
             return redirect('quest_list')
     else:
+        initial_data = {}
+        if goal:
+            initial_data['goal'] = goal
+        form = QuestForm(initial=initial_data, user=request.user)
+        
+        # Get AI suggestions
         ai_service = AIService()
-        suggestions = ai_service.generate_quest_suggestions(request.user.userprofile)
-        form = QuestForm()
+        try:
+            suggestions = ai_service.generate_quest_suggestions(request.user.userprofile, goal)
+        except Exception as e:
+            print(f"Error generating suggestions: {str(e)}")  # Add debug logging
+            suggestions = []
+            messages.warning(request, 'Could not generate quest suggestions at this time.')
     
-    return render(request, 'core/quest_form.html', {
+    context = {
         'form': form,
-        'quest_suggestions': suggestions
-    })
+        'suggestions': suggestions if 'suggestions' in locals() else [],
+        'goal': goal
+    }
+    return render(request, 'core/quest_form.html', context)
 
 @login_required
 def quest_complete(request, quest_id):
     quest = get_object_or_404(Quest, id=quest_id, user=request.user)
     
-    if quest.status != 'COMPLETED':
-        quest.status = 'COMPLETED'
-        quest.save()
-        
-        # Award XP and coins
-        profile = request.user.userprofile
-        profile.experience += quest.xp_reward
-        profile.coins += quest.coin_reward
-        
-        # Check for level up
-        if profile.level_up():
-            messages.success(request, f'Level Up! You are now level {profile.level}!')
-            profile.update_rank()
-        
-        profile.save()
-        
-        # Create achievement if applicable
-        check_quest_achievements(request.user)
-        
-        messages.success(request, f'Quest completed! Earned {quest.xp_reward} XP and {quest.coin_reward} coins!')
+    if quest.status != 'completed':
+        quest.complete()
+        messages.success(request, f'Quest completed! Earned {quest.reward_xp * quest.difficulty} XP and {quest.reward_coins * quest.difficulty} coins!')
     
-    return redirect('quest_list')
+    return redirect('dashboard')
+
+@login_required
+def quest_fail(request, quest_id):
+    quest = get_object_or_404(Quest, id=quest_id, user=request.user)
+    
+    if quest.status != 'failed':
+        quest.fail()
+        messages.warning(request, 'Quest failed. Better luck next time!')
+    
+    return redirect('dashboard')
+
+@login_required
+def quest_start(request, quest_id):
+    quest = get_object_or_404(Quest, id=quest_id, user=request.user)
+    
+    if quest.status == 'not_started':
+        quest.start()
+        messages.info(request, f'Started quest: {quest.title}')
+    
+    return redirect('dashboard')
 
 @login_required
 def goal_list(request):
@@ -161,33 +240,65 @@ def goal_create(request):
     if request.method == 'POST':
         form = GoalForm(request.POST)
         if form.is_valid():
-            goal = form.save(commit=False)
-            goal.user = request.user
-            goal.save()
-            
-            # Generate quests for this goal
-            ai_service = AIService()
-            quests = ai_service.generate_quests_from_goal(request.user.userprofile, goal)
-            
-            # Create the quests
-            for quest_data in quests:
-                Quest.objects.create(
-                    user=request.user,
-                    title=quest_data['title'],
-                    description=quest_data['description'],
-                    difficulty=quest_data['difficulty'],
-                    reward_xp=quest_data['reward_xp'],
-                    reward_coins=quest_data['reward_coins'],
-                    required_level=quest_data['required_level'],
-                    deadline=quest_data.get('deadline', goal.deadline)
-                )
-            
-            messages.success(request, 'Goal created! Check your quest list for auto-generated quests to help you achieve it.')
-            return redirect('quest_list')
+            try:
+                goal = form.save(commit=False)
+                goal.user = request.user
+                goal.save()
+                
+                # Generate quests for this goal
+                ai_service = AIService()
+                quests = ai_service.generate_quests_from_goal(request.user.userprofile, goal)
+                
+                # Create the quests
+                created_quests = []
+                for quest_data in quests:
+                    try:
+                        quest = Quest.objects.create(
+                            user=request.user,
+                            goal=goal,  # Link quest to goal
+                            title=quest_data['title'],
+                            description=quest_data['description'],
+                            difficulty=int(quest_data['difficulty']),  # Ensure difficulty is an integer
+                            reward_xp=quest_data['reward_xp'],
+                            reward_coins=quest_data['reward_coins'],
+                            required_level=quest_data['required_level'],
+                            deadline=quest_data.get('deadline')
+                        )
+                        created_quests.append(quest)
+                    except (ValueError, TypeError) as e:
+                        # Log the error but continue with other quests
+                        print(f"Error creating quest: {str(e)}")
+                        continue
+                
+                if created_quests:
+                    messages.success(request, f'Goal created with {len(created_quests)} auto-generated quests to help you achieve it!')
+                else:
+                    messages.warning(request, 'Goal created but there was an issue generating quests. Please try creating quests manually.')
+                
+                return redirect('quest_list')
+            except Exception as e:
+                messages.error(request, f'Error creating goal: {str(e)}')
+                return render(request, 'core/goal_form.html', {'form': form})
     else:
         form = GoalForm()
     
     return render(request, 'core/goal_form.html', {'form': form})
+
+@login_required
+def goal_detail(request, goal_id):
+    goal = get_object_or_404(Goal, id=goal_id, user=request.user)
+    quests = Quest.objects.filter(user=request.user, goal=goal).order_by('-created_at')
+    
+    context = {
+        'goal': goal,
+        'quests': quests,
+        'completed_quests': goal.completed_quests_count,
+        'active_quests': goal.active_quests_count,
+        'total_quests': goal.total_quests_count,
+        'completion_percentage': goal.completion_percentage
+    }
+    
+    return render(request, 'core/goal_detail.html', context)
 
 @login_required
 def community_feed(request):
@@ -260,24 +371,6 @@ def profile_edit(request):
         'form': form,
     }
     return render(request, 'core/profile_edit.html', context)
-
-@login_required
-def quest_start(request, quest_id):
-    quest = get_object_or_404(Quest, id=quest_id, user=request.user)
-    if quest.start_quest():
-        messages.success(request, f'Quest "{quest.name}" has been started!')
-    else:
-        messages.error(request, 'Unable to start quest. Make sure it is available.')
-    return redirect('quest_list')
-
-@login_required
-def quest_fail(request, quest_id):
-    quest = get_object_or_404(Quest, id=quest_id, user=request.user)
-    if quest.fail_quest():
-        messages.warning(request, f'Quest "{quest.name}" has been marked as failed.')
-    else:
-        messages.error(request, 'Unable to fail quest. Make sure it is in progress.')
-    return redirect('quest_list')
 
 @login_required
 def goal_edit(request, goal_id):

@@ -1,111 +1,222 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block title %}Dashboard - Solo Leveling System{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <!-- User Stats -->
-    <div class="stats-card">
-        <div class="user-level">
-            <div class="level-circle">
-                <span class="level-number">{{ profile.level }}</span>
-                <span class="level-text">Level</span>
-            </div>
-            <div class="xp-bar">
-                <div class="xp-progress" style="width: {{ xp_progress }}%"></div>
-                <span class="xp-text">{{ profile.experience }} / {{ required_xp }} XP</span>
+<div class="container py-4">
+    <!-- Hunter Status Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card glass-morphism">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="hunter-avatar me-3">
+                            <i class="fas fa-user-circle fa-3x"></i>
+                        </div>
+                        <div>
+                            <h2 class="mb-0">{{ user_profile.user.username }}</h2>
+                            <p class="text-muted mb-0">{{ user_profile.get_rank_display }} | Level {{ user_profile.level }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {{ user_profile.level_progress }}%"
+                             aria-valuenow="{{ user_profile.level_progress }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ user_profile.level_progress }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ user_profile.experience }} XP / {{ xp_to_next_level }} XP to Next Level</small>
+                </div>
             </div>
         </div>
-        
-        <div class="user-rank rank-{{ profile.rank }}">
-            <span class="rank-title">{{ profile.get_rank_display }}</span>
-            <span class="rank-subtitle">Hunter Rank</span>
-        </div>
-        
-        <div class="user-stats">
-            <div class="stat">
-                <i class="fas fa-coins"></i>
-                <span>{{ profile.coins }}</span>
-            </div>
-            <div class="stat">
-                <i class="fas fa-trophy"></i>
-                <span>{{ profile.achievements.count }}</span>
+        <div class="col-md-4">
+            <div class="card glass-morphism h-100">
+                <div class="card-body">
+                    <h4 class="card-title">Statistics</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Quests:</span>
+                        <span>{{ total_quests }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Completed:</span>
+                        <span>{{ completed_quest_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Success Rate:</span>
+                        <span>{{ completion_rate }}%</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Daily Progress -->
-    <div class="progress-card">
-        <h3>Daily Progress</h3>
-        <div class="daily-progress">
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ daily_progress }}%"></div>
+    <!-- Active Goals Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card glass-morphism">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0">Active Goals</h3>
+                        <a href="{% url 'goal_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i>New Goal
+                        </a>
+                    </div>
+                    
+                    {% if active_goals %}
+                        <div class="row">
+                            {% for goal in active_goals %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="goal-card p-3 rounded">
+                                        <h5 class="mb-2">{{ goal.title }}</h5>
+                                        <div class="progress mb-2" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 role="progressbar" 
+                                                 style="width: {{ goal.completion_percentage }}%"
+                                                 aria-valuenow="{{ goal.completion_percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">{{ goal.completion_percentage }}% Complete</small>
+                                            <a href="{% url 'goal_detail' goal.id %}" class="btn btn-link btn-sm p-0">View Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No active goals. Start by creating one!</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-            <span class="progress-text">{{ daily_completed }} / {{ daily_total }} Quests</span>
         </div>
     </div>
 
-    <!-- Active Quests -->
-    <div class="quests-section">
-        <div class="section-header">
-            <h3>Active Quests</h3>
-            <a href="{% url 'quest_create' %}" class="btn btn-primary">New Quest</a>
-        </div>
-        
-        <div class="quest-grid">
-            {% for quest in active_quests %}
-            <div class="quest-card rank-{{ quest.difficulty }}">
-                <div class="quest-header">
-                    <span class="quest-rank">{{ quest.get_difficulty_display }}</span>
-                    <span class="quest-reward">
-                        <i class="fas fa-star"></i> {{ quest.xp_reward }} XP
-                    </span>
-                </div>
-                
-                <h4 class="quest-title">{{ quest.name }}</h4>
-                <p class="quest-description">{{ quest.description }}</p>
-                
-                <div class="quest-footer">
-                    <span class="quest-duration">
-                        <i class="fas fa-clock"></i> {{ quest.duration_hours }}h
-                    </span>
-                    <a href="{% url 'quest_complete' quest.id %}" class="btn btn-success">Complete</a>
+    <!-- Quests Section -->
+    <div class="row">
+        <!-- Active Quests -->
+        <div class="col-md-6 mb-4">
+            <div class="card glass-morphism h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0">Active Quests</h3>
+                        <a href="{% url 'quest_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i>New Quest
+                        </a>
+                    </div>
+                    
+                    {% if active_quests %}
+                        {% for quest in active_quests %}
+                            <div class="quest-card mb-3">
+                                <h5 class="mb-2">{{ quest.title }}</h5>
+                                <p class="mb-2 small text-muted">{{ quest.description|truncatechars:100 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="quest-rewards">
+                                        <span class="me-2"><i class="fas fa-star text-warning"></i> {{ quest.reward_xp }} XP</span>
+                                        <span><i class="fas fa-coins text-warning"></i> {{ quest.reward_coins }}</span>
+                                    </div>
+                                    {% if quest.goal %}
+                                        <span class="badge bg-info">{{ quest.goal.title|truncatechars:20 }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No active quests. Start a new one!</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            {% empty %}
-            <div class="empty-state">
-                <i class="fas fa-scroll"></i>
-                <p>No active quests. Create a new quest to begin your journey!</p>
-            </div>
-            {% endfor %}
         </div>
-    </div>
 
-    <!-- Recent Achievements -->
-    <div class="achievements-section">
-        <h3>Recent Achievements</h3>
-        <div class="achievement-list">
-            {% for achievement in profile.achievements.all|slice:":5" %}
-            <div class="achievement-card">
-                <div class="achievement-icon">
-                    <i class="fas fa-medal"></i>
-                </div>
-                <div class="achievement-info">
-                    <h4>{{ achievement.name }}</h4>
-                    <p>{{ achievement.description }}</p>
-                </div>
-                <div class="achievement-reward">
-                    <span><i class="fas fa-star"></i> {{ achievement.xp_reward }}</span>
-                    <span><i class="fas fa-coins"></i> {{ achievement.coin_reward }}</span>
+        <!-- Recently Completed Quests -->
+        <div class="col-md-6 mb-4">
+            <div class="card glass-morphism h-100">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Recently Completed</h3>
+                    
+                    {% if completed_quests %}
+                        {% for quest in completed_quests %}
+                            <div class="quest-card completed mb-3">
+                                <h5 class="mb-2">{{ quest.title }}</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="quest-rewards">
+                                        <span class="me-2"><i class="fas fa-star text-warning"></i> {{ quest.reward_xp }} XP</span>
+                                        <span><i class="fas fa-coins text-warning"></i> {{ quest.reward_coins }}</span>
+                                    </div>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No completed quests yet. Keep going!</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            {% empty %}
-            <div class="empty-state">
-                <i class="fas fa-trophy"></i>
-                <p>Complete quests to earn achievements!</p>
-            </div>
-            {% endfor %}
         </div>
     </div>
 </div>
+
+<style>
+.hunter-avatar {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 77, 255, 0.1);
+    border-radius: 50%;
+    color: #7c4dff;
+}
+
+.goal-card {
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.goal-card:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.quest-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.quest-card:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.quest-card.completed {
+    opacity: 0.7;
+}
+
+.quest-rewards {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.progress {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.progress-bar {
+    background: linear-gradient(45deg, #7c4dff, #ff0080);
+}
+</style>
 {% endblock %}

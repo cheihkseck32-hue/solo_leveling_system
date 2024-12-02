@@ -9,8 +9,8 @@ class AIService:
         self.quest_templates = {
             'PRODUCTIVITY': [
                 {
-                    'title': 'Complete {task_count} tasks',
-                    'description': 'Focus on completing {task_count} tasks to make progress on your goal.',
+                    'title': 'Complete {task_count} {task_type}',
+                    'description': 'Focus on completing {task_count} {task_type} to make progress on your goal.',
                     'difficulties': {
                         1: {'task_count': '2-3', 'xp': 100, 'coins': 10},
                         2: {'task_count': '4-5', 'xp': 200, 'coins': 20},
@@ -18,8 +18,8 @@ class AIService:
                     }
                 },
                 {
-                    'title': 'Work on {activity} for {time_amount}',
-                    'description': 'Spend focused time on your goal without distractions.',
+                    'title': 'Dedicate {time_amount} to {activity}',
+                    'description': 'Spend focused time on {activity} without distractions.',
                     'difficulties': {
                         1: {'time_amount': '30 minutes', 'xp': 100, 'coins': 10},
                         2: {'time_amount': '1 hour', 'xp': 200, 'coins': 20},
@@ -29,8 +29,8 @@ class AIService:
             ],
             'LEARNING': [
                 {
-                    'title': 'Study session: {duration}',
-                    'description': 'Focus on learning and practicing your subject.',
+                    'title': 'Study {topic} for {duration}',
+                    'description': 'Focus on learning {topic} through active study and practice.',
                     'difficulties': {
                         1: {'duration': '30 minutes', 'xp': 100, 'coins': 10},
                         2: {'duration': '1 hour', 'xp': 200, 'coins': 20},
@@ -38,8 +38,8 @@ class AIService:
                     }
                 },
                 {
-                    'title': 'Practice session: {count} exercises',
-                    'description': 'Complete practice exercises to reinforce your knowledge.',
+                    'title': 'Complete {count} exercises in {subject}',
+                    'description': 'Practice and reinforce your knowledge by completing exercises.',
                     'difficulties': {
                         1: {'count': '3-5', 'xp': 150, 'coins': 15},
                         2: {'count': '6-8', 'xp': 300, 'coins': 30},
@@ -49,57 +49,25 @@ class AIService:
             ],
             'FITNESS': [
                 {
-                    'title': 'Workout session: {duration}',
-                    'description': 'Complete a {intensity} workout session.',
+                    'title': '{exercise_type} Workout Session',
+                    'description': 'Complete a {intensity} {exercise_type} workout session.',
                     'difficulties': {
-                        1: {'duration': '20 minutes', 'intensity': 'light', 'xp': 100, 'coins': 10},
-                        2: {'duration': '40 minutes', 'intensity': 'moderate', 'xp': 200, 'coins': 20},
-                        3: {'duration': '60 minutes', 'intensity': 'intense', 'xp': 300, 'coins': 30},
+                        1: {'intensity': 'light', 'xp': 100, 'coins': 10},
+                        2: {'intensity': 'moderate', 'xp': 200, 'coins': 20},
+                        3: {'intensity': 'intense', 'xp': 300, 'coins': 30},
                     }
                 },
                 {
-                    'title': 'Exercise goal: {target}',
+                    'title': 'Achieve {target} {metric}',
                     'description': 'Push yourself to reach your fitness milestone.',
                     'difficulties': {
-                        1: {'target': '2000 steps', 'xp': 100, 'coins': 10},
-                        2: {'target': '5000 steps', 'xp': 200, 'coins': 20},
-                        3: {'target': '10000 steps', 'xp': 300, 'coins': 30},
+                        1: {'target': 'beginner', 'xp': 100, 'coins': 10},
+                        2: {'target': 'intermediate', 'xp': 200, 'coins': 20},
+                        3: {'target': 'advanced', 'xp': 300, 'coins': 30},
                     }
                 }
             ]
         }
-    
-    def generate_quest_suggestions(self, user_profile, goal=None):
-        """Generate quest suggestions based on user profile and optional goal"""
-        suggestions = []
-        
-        # Determine categories to generate suggestions from
-        if goal:
-            categories = [self._determine_goal_category(goal.title, goal.description)]
-        else:
-            categories = list(self.quest_templates.keys())
-        
-        # Generate 3-5 suggestions per category
-        for category in categories:
-            templates = self.quest_templates.get(category, [])
-            num_suggestions = min(len(templates), random.randint(2, 3))
-            
-            for _ in range(num_suggestions):
-                template = random.choice(templates)
-                difficulty = random.randint(1, min(3, user_profile.level))
-                
-                quest_data = self._generate_quest_from_template(
-                    template,
-                    difficulty,
-                    goal.title if goal else "",
-                    goal.description if goal else ""
-                )
-                
-                # Add category context
-                quest_data['category'] = category
-                suggestions.append(quest_data)
-        
-        return suggestions
     
     def generate_quests_from_goal(self, user_profile, goal):
         """Generate a set of specific quests to help achieve the goal"""
@@ -111,7 +79,7 @@ class AIService:
         
         for _ in range(num_quests):
             template = random.choice(templates)
-            difficulty = random.randint(1, min(3, user_profile.level))  # Cap difficulty by user level
+            difficulty = random.randint(1, 3)  # Generate quests of varying difficulty
             
             quest_data = self._generate_quest_from_template(
                 template, 
@@ -150,26 +118,23 @@ class AIService:
         # Extract key terms from goal
         keywords = self._extract_keywords(goal_title, goal_description)
         
-        # Create format dictionary with all possible variables
-        format_dict = {
-            # Template-specific variables
-            'task_count': difficulty_data.get('task_count', '3'),
-            'time_amount': difficulty_data.get('time_amount', '30 minutes'),
-            'duration': difficulty_data.get('duration', '30 minutes'),
-            'count': difficulty_data.get('count', '3'),
-            'intensity': difficulty_data.get('intensity', 'moderate'),
-            'target': difficulty_data.get('target', '2000 steps'),
-            
-            # Extracted keywords
-            'activity': keywords.get('activity', 'the task'),
-            'subject': keywords.get('subject', 'your subject'),
-            'topic': keywords.get('subject', 'the material'),
-        }
-        
         # Generate quest details
         quest_details = {
-            'title': template['title'].format(**format_dict),
-            'description': template['description'].format(**format_dict),
+            'title': template['title'].format(**{
+                **keywords,
+                **difficulty_data,
+                'task_type': keywords.get('activity', 'tasks'),
+                'exercise_type': keywords.get('activity', 'fitness'),
+                'topic': keywords.get('subject', 'the subject'),
+                'subject': keywords.get('subject', 'the material'),
+                'metric': keywords.get('metric', 'goal'),
+            }),
+            'description': template['description'].format(**{
+                **keywords,
+                **difficulty_data,
+                'activity': keywords.get('activity', 'the task'),
+                'topic': keywords.get('subject', 'the subject'),
+            }),
             'difficulty': difficulty,
             'reward_xp': difficulty_data['xp'],
             'reward_coins': difficulty_data['coins'],

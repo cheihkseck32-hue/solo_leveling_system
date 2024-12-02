@@ -5,18 +5,19 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
 def validate_rank(value):
-    valid_ranks = ['E', 'D', 'C', 'B', 'A', 'S']
+    valid_ranks = ['F', 'E', 'D', 'C', 'B', 'A', 'S']
     if value not in valid_ranks:
         raise ValidationError(f'{value} is not a valid rank. Must be one of {valid_ranks}')
 
 class UserProfile(models.Model):
     RANK_CHOICES = [
-        ('E', 'E-Rank'),
-        ('D', 'D-Rank'),
-        ('C', 'C-Rank'),
-        ('B', 'B-Rank'),
-        ('A', 'A-Rank'),
-        ('S', 'S-Rank'),
+        ('F', 'F-Rank Hunter'),
+        ('E', 'E-Rank Hunter'),
+        ('D', 'D-Rank Hunter'),
+        ('C', 'C-Rank Hunter'),
+        ('B', 'B-Rank Hunter'),
+        ('A', 'A-Rank Hunter'),
+        ('S', 'S-Rank Hunter'),
     ]
     
     PERSONALITY_CHOICES = [
@@ -28,11 +29,11 @@ class UserProfile(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, default='Hunter')
-    rank = models.CharField(max_length=1, choices=RANK_CHOICES, default='E', validators=[validate_rank])
-    level = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
-    experience = models.PositiveIntegerField(default=0)
-    coins = models.PositiveIntegerField(default=0)
-    personality_type = models.CharField(max_length=20, choices=PERSONALITY_CHOICES, default='achiever')
+    level = models.IntegerField(default=1)
+    experience = models.IntegerField(default=0)
+    coins = models.IntegerField(default=0)
+    rank = models.CharField(max_length=1, choices=RANK_CHOICES, default='F', validators=[validate_rank])
+    personality_type = models.CharField(max_length=50, blank=True, null=True)
     title = models.CharField(max_length=100, default='Novice Hunter')
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
@@ -53,22 +54,50 @@ class UserProfile(models.Model):
             models.Index(fields=['personality_type']),
         ]
     
-    def level_up(self):
-        required_exp = self.level * 100
-        if self.experience >= required_exp:
-            self.level += 1
-            self.experience -= required_exp
-            self.daily_quest_limit = min(self.daily_quest_limit + 1, 10)
-            self.update_rank()
-            return True
-        return False
-    
+    @property
+    def level_progress(self):
+        """Calculate the progress percentage to the next level"""
+        xp_for_next_level = self.xp_to_next_level()
+        xp_from_last_level = self.level * 100  # Base XP needed for current level
+        current_level_xp = self.experience - xp_from_last_level
+        return min(100, int((current_level_xp / xp_for_next_level) * 100))
+
+    def xp_to_next_level(self):
+        """Calculate XP needed for next level"""
+        return (self.level + 1) * 100
+
+    def get_next_rank(self):
+        """Get the next rank based on current rank"""
+        current_rank_index = [choice[0] for choice in self.RANK_CHOICES].index(self.rank)
+        if current_rank_index < len(self.RANK_CHOICES) - 1:
+            return self.RANK_CHOICES[current_rank_index + 1][1]
+        return self.RANK_CHOICES[-1][1]  # Return highest rank if already at max
+
     def add_experience(self, amount):
+        """Add experience points and handle level ups"""
         self.experience += amount
-        while self.level_up():
-            pass
+        while self.experience >= self.xp_to_next_level():
+            self.level_up()
+
+    def level_up(self):
+        """Handle level up logic"""
+        self.level += 1
+        # Update rank based on level
+        if self.level >= 50:
+            self.rank = 'S'
+        elif self.level >= 40:
+            self.rank = 'A'
+        elif self.level >= 30:
+            self.rank = 'B'
+        elif self.level >= 20:
+            self.rank = 'C'
+        elif self.level >= 10:
+            self.rank = 'D'
+        elif self.level >= 5:
+            self.rank = 'E'
+        self.daily_quest_limit = min(self.daily_quest_limit + 1, 10)
         self.save()
-    
+
     def update_quest_streak(self):
         now = timezone.now()
         if self.last_quest_completion:
@@ -80,21 +109,6 @@ class UserProfile(models.Model):
         self.last_quest_completion = now
         self.save()
 
-    def update_rank(self):
-        if self.level >= 50:
-            self.rank = 'S'
-        elif self.level >= 40:
-            self.rank = 'A'
-        elif self.level >= 30:
-            self.rank = 'B'
-        elif self.level >= 20:
-            self.rank = 'C'
-        elif self.level >= 10:
-            self.rank = 'D'
-        else:
-            self.rank = 'E'
-        self.save()
-    
     def can_take_quest(self, quest):
         return (
             self.level >= quest.required_level and
@@ -113,134 +127,154 @@ class UserProfile(models.Model):
 
 class Goal(models.Model):
     GOAL_TYPES = [
-        ('SHORT', 'Short Term'),
-        ('LONG', 'Long Term'),
-        ('DAILY', 'Daily'),
-        ('WEEKLY', 'Weekly'),
-        ('MONTHLY', 'Monthly'),
+        ('personal', 'Personal Development'),
+        ('career', 'Career'),
+        ('health', 'Health & Fitness'),
+        ('education', 'Education'),
+        ('financial', 'Financial'),
+        ('creative', 'Creative'),
+        ('social', 'Social'),
+        ('other', 'Other')
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    goal_type = models.CharField(max_length=10, choices=GOAL_TYPES, default='SHORT')
-    deadline = models.DateTimeField()
+    goal_type = models.CharField(max_length=20, choices=GOAL_TYPES, default='personal')
+    deadline = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    completed = models.BooleanField(default=False)
-    progress = models.FloatField(
-        default=0.0,
-        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)]
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    priority = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    xp_reward = models.PositiveIntegerField(default=100)
-    required_level = models.PositiveIntegerField(default=1)
-    
-    class Meta:
-        indexes = [
-            models.Index(fields=['user', 'completed']),
-            models.Index(fields=['deadline']),
-        ]
-    
-    def is_overdue(self):
-        return not self.completed and timezone.now() > self.deadline
-    
-    def complete(self):
-        if not self.completed:
-            self.completed = True
-            self.progress = 100.0
-            self.save()
-            
-            profile = self.user.userprofile
-            profile.add_experience(self.xp_reward)
-    
-    def update_progress(self, new_progress):
-        self.progress = min(max(new_progress, 0.0), 100.0)
-        if self.progress >= 100.0:
-            self.complete()
-        self.save()
 
     def __str__(self):
         return self.title
 
-class Quest(models.Model):
-    DIFFICULTY_CHOICES = [
-        ('EASY', 'Easy'),
-        ('MEDIUM', 'Medium'),
-        ('HARD', 'Hard'),
-    ]
-    
-    STATUS_CHOICES = [
-        ('AVAILABLE', 'Available'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('COMPLETED', 'Completed'),
-        ('FAILED', 'Failed'),
-    ]
-    
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='EASY')
-    reward_xp = models.PositiveIntegerField(default=50)
-    reward_coins = models.PositiveIntegerField(default=25)
-    required_level = models.PositiveIntegerField(default=1)
-    deadline = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='AVAILABLE')
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-    
+    @property
+    def completion_percentage(self):
+        total_quests = self.quests.count()
+        if total_quests == 0:
+            return 0
+        completed_quests = self.quests.filter(status='completed').count()
+        return int((completed_quests / total_quests) * 100)
+
+    @property
+    def completed_quests_count(self):
+        return self.quests.filter(status='completed').count()
+
+    @property
+    def active_quests_count(self):
+        return self.quests.filter(status='in_progress').count()
+
+    @property
+    def total_quests_count(self):
+        return self.quests.count()
+
+    @property
+    def is_completed(self):
+        return self.completion_percentage == 100
+
     class Meta:
         indexes = [
-            models.Index(fields=['difficulty']),
-            models.Index(fields=['required_level']),
-            models.Index(fields=['created_at']),
-            models.Index(fields=['status']),
+            models.Index(fields=['user', 'deadline']),
+            models.Index(fields=['user', 'is_active']),
         ]
         ordering = ['-created_at']
+
+class Quest(models.Model):
+    QUEST_STATUS = [
+        ('not_started', 'Not Started'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    ]
     
-    def calculate_rewards(self):
-        """Calculate rewards based on difficulty and required level"""
-        difficulty_multipliers = {
-            'EASY': 1,
-            'MEDIUM': 2,
-            'HARD': 3,
-        }
-        multiplier = difficulty_multipliers.get(self.difficulty, 1)
-        self.reward_xp = 50 * multiplier * self.required_level
-        self.reward_coins = 25 * multiplier * self.required_level
+    DIFFICULTY_CHOICES = [
+        (1, 'EASY'),
+        (2, 'MEDIUM'),
+        (3, 'HARD'),
+        (4, 'EXPERT'),
+        (5, 'LEGENDARY')
+    ]
     
-    def is_available(self):
-        return self.status == 'AVAILABLE'
-    
-    def is_completed(self):
-        return self.status == 'COMPLETED'
-    
-    def is_in_progress(self):
-        return self.status == 'IN_PROGRESS'
-    
-    def is_failed(self):
-        return self.status == 'FAILED'
-    
-    def start_quest(self):
-        if self.is_available():
-            self.status = 'IN_PROGRESS'
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    difficulty = models.IntegerField(
+        choices=DIFFICULTY_CHOICES,
+        default=1,
+        help_text="Quest difficulty level"
+    )
+    reward_xp = models.IntegerField(default=100)
+    reward_coins = models.IntegerField(default=10)
+    required_level = models.IntegerField(default=1)
+    deadline = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=QUEST_STATUS, default='not_started')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    goal = models.ForeignKey('Goal', on_delete=models.CASCADE, related_name='quests', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def complete(self):
+        """Complete the quest and award rewards"""
+        if self.status != 'completed':
+            self.status = 'completed'
+            self.completed_at = timezone.now()
             self.save()
-    
-    def complete_quest(self):
-        if self.is_in_progress():
-            self.status = 'COMPLETED'
-            self.save()
-            # Award rewards to user
+            
+            # Calculate rewards based on difficulty
+            difficulty_multiplier = self.difficulty
+            xp_reward = self.reward_xp * difficulty_multiplier
+            coin_reward = self.reward_coins * difficulty_multiplier
+            
+            # Award XP and coins to user
             profile = self.user.userprofile
-            profile.experience += self.reward_xp
-            profile.coins += self.reward_coins
+            profile.add_experience(xp_reward)
+            profile.coins += coin_reward
             profile.save()
-    
-    def fail_quest(self):
-        if self.is_in_progress():
-            self.status = 'FAILED'
+
+    def fail(self):
+        """Mark the quest as failed"""
+        if self.status != 'failed':
+            self.status = 'failed'
             self.save()
-    
+
+    def start(self):
+        """Start the quest"""
+        if self.status == 'not_started':
+            self.status = 'in_progress'
+            self.save()
+
+    @property
+    def is_completed(self):
+        return self.status == 'completed'
+
+    @property
+    def is_failed(self):
+        return self.status == 'failed'
+
+    @property
+    def is_active(self):
+        return self.status == 'in_progress'
+
+    @property
+    def difficulty_name(self):
+        """Get the display name for the difficulty level"""
+        return dict(self.DIFFICULTY_CHOICES).get(self.difficulty, 'Unknown')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['goal', 'status']),
+            models.Index(fields=['completed_at']),
+        ]
+        ordering = ['-created_at']
+
     def __str__(self):
-        return f"{self.title} ({self.get_difficulty_display()})"
+        return f"{self.title} ({self.difficulty_name})"
 
 class Achievement(models.Model):
     ACHIEVEMENT_TYPES = [

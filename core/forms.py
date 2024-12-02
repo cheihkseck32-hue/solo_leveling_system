@@ -22,35 +22,24 @@ class UserProfileForm(forms.ModelForm):
 class QuestForm(forms.ModelForm):
     class Meta:
         model = Quest
-        fields = ('title', 'description', 'difficulty', 'required_level', 'deadline', 'reward_xp', 'reward_coins')
+        fields = ['title', 'description', 'difficulty', 'deadline', 'goal']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Describe your quest...'}),
-            'difficulty': forms.Select(choices=[
-                ('EASY', 'Easy'),
-                ('MEDIUM', 'Medium'),
-                ('HARD', 'Hard'),
-            ]),
-            'deadline': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'reward_xp': forms.NumberInput(attrs={'min': 10, 'max': 1000, 'step': 10}),
-            'reward_coins': forms.NumberInput(attrs={'min': 5, 'max': 500, 'step': 5}),
-            'required_level': forms.NumberInput(attrs={'min': 1, 'max': 100})
+            'deadline': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'difficulty': forms.Select(choices=Quest.DIFFICULTY_CHOICES),
+            'goal': forms.Select(attrs={'class': 'form-select'}),
         }
-        labels = {
-            'title': 'Quest Title',
-            'description': 'Quest Description',
-            'difficulty': 'Quest Difficulty',
-            'required_level': 'Required Hunter Level',
-            'deadline': 'Quest Deadline',
-            'reward_xp': 'XP Reward',
-            'reward_coins': 'Coin Reward'
-        }
-        help_texts = {
-            'difficulty': 'Choose the difficulty level of your quest',
-            'required_level': 'Minimum hunter level required to accept this quest',
-            'deadline': 'When does this quest need to be completed?',
-            'reward_xp': 'Experience points earned upon completion',
-            'reward_coins': 'Coins earned upon completion'
-        }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            self.fields['goal'].queryset = Goal.objects.filter(user=user, is_active=True)
+            self.fields['goal'].empty_label = "No specific goal"
+        
+        self.fields['difficulty'].help_text = "Higher difficulty = higher rewards"
+        self.fields['deadline'].required = False
+        self.fields['goal'].required = False
 
 class GoalForm(forms.ModelForm):
     class Meta:

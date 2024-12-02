@@ -1,0 +1,358 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .quest-board {
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('{% static "images/quest-board-bg.jpg" %}') center/cover;
+        border-radius: 15px;
+        padding: 2rem;
+        color: #fff;
+        margin-bottom: 2rem;
+    }
+    
+    .quest-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid #daa520;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .quest-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(218, 165, 32, 0.2);
+        border-color: #ffd700;
+    }
+    
+    .quest-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #daa520, #ffd700);
+    }
+    
+    .quest-card.completed::before {
+        background: linear-gradient(90deg, #28a745, #34ce57);
+    }
+    
+    .quest-card.failed::before {
+        background: linear-gradient(90deg, #dc3545, #ff4d5a);
+    }
+    
+    .quest-card.in-progress::before {
+        background: linear-gradient(90deg, #007bff, #33a1ff);
+    }
+    
+    .quest-card.quest-overdue::before {
+        background: linear-gradient(90deg, #dc3545, #ff4d5a);
+    }
+    
+    .difficulty-stars {
+        color: #ffd700;
+    }
+    
+    .reward-badge {
+        background: linear-gradient(45deg, #daa520, #ffd700);
+        color: #000;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .quest-filters {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-label {
+        color: #daa520;
+        font-weight: bold;
+    }
+    
+    .quest-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .quest-actions {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        background: rgba(0, 0, 0, 0.8);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .quest-card:hover .quest-actions {
+        opacity: 1;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .deadline-warning {
+        color: #dc3545;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .quest-level {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: #2c3e50;
+        color: #fff;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        background: transparent;
+        border-color: #daa520;
+        color: #daa520;
+    }
+    
+    .pagination .page-link:hover {
+        background: #daa520;
+        color: #fff;
+    }
+    
+    .pagination .active .page-link {
+        background: #daa520;
+        border-color: #daa520;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="quest-board">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4 text-warning">
+                <i class="fas fa-scroll"></i> Quest Board
+            </h1>
+            <a href="{% url 'quest_create' %}" class="btn btn-warning btn-lg">
+                <i class="fas fa-plus-circle"></i> New Quest
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <div class="quest-filters">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="filter-label" for="status">Quest Status</label>
+                    <select name="status" id="status" class="form-select bg-dark text-light">
+                        <option value="">All Statuses</option>
+                        <option value="not_started" {% if request.GET.status == 'not_started' %}selected{% endif %}>Available</option>
+                        <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label" for="difficulty">Difficulty</label>
+                    <select name="difficulty" id="difficulty" class="form-select bg-dark text-light">
+                        <option value="">All Difficulties</option>
+                        <option value="1" {% if request.GET.difficulty == '1' %}selected{% endif %}>⭐ Easy</option>
+                        <option value="2" {% if request.GET.difficulty == '2' %}selected{% endif %}>⭐⭐ Medium</option>
+                        <option value="3" {% if request.GET.difficulty == '3' %}selected{% endif %}>⭐⭐⭐ Hard</option>
+                        <option value="4" {% if request.GET.difficulty == '4' %}selected{% endif %}>⭐⭐⭐⭐ Expert</option>
+                        <option value="5" {% if request.GET.difficulty == '5' %}selected{% endif %}>⭐⭐⭐⭐⭐ Legendary</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label" for="goal">Related Goal</label>
+                    <select name="goal" id="goal" class="form-select bg-dark text-light">
+                        <option value="">All Goals</option>
+                        {% for goal in goals %}
+                        <option value="{{ goal.id }}" {% if request.GET.goal == goal.id|stringformat:"s" %}selected{% endif %}>
+                            {{ goal.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label" for="search">Search Quests</label>
+                    <input type="text" name="search" id="search" class="form-control bg-dark text-light" 
+                           value="{{ request.GET.search }}" placeholder="Search by title...">
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-warning me-2">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'quest_list' %}" class="btn btn-outline-light">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quests Grid -->
+        <div class="row g-4">
+            {% for quest in quests %}
+            <div class="col-md-4 mb-4">
+                <div class="card quest-card h-100 {% if quest.deadline and quest.deadline < now %}quest-overdue{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ quest.title }}</h5>
+                            <span class="badge {% if quest.status == 'COMPLETED' %}bg-success{% elif quest.status == 'IN_PROGRESS' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                {{ quest.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="card-text">{{ quest.description }}</p>
+                        
+                        <div class="quest-details">
+                            <div class="difficulty mb-2">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= quest.difficulty %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-muted"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            {% if quest.deadline %}
+                            <div class="deadline mb-2">
+                                <i class="far fa-clock"></i>
+                                <span class="{% if quest.deadline < now %}text-danger{% endif %}">
+                                    Due: {{ quest.deadline|date:"M d, Y" }}
+                                    {% if quest.deadline < now %}
+                                    <span class="badge bg-danger ms-2">Overdue</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if quest.reward_xp or quest.reward_coins %}
+                            <div class="rewards mb-2">
+                                {% if quest.reward_xp %}
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-star"></i> {{ quest.reward_xp }} XP
+                                </span>
+                                {% endif %}
+                                {% if quest.reward_coins %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-coins"></i> {{ quest.reward_coins }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if quest.goal %}
+                            <div class="goal mb-2">
+                                <i class="fas fa-bullseye"></i>
+                                <span class="text-muted">{{ quest.goal.title }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="quest-actions mt-3">
+                            <a href="{% url 'quest_detail' quest.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-info-circle"></i> Details
+                            </a>
+                            {% if quest.status != 'COMPLETED' %}
+                            <form action="{% url 'complete_quest' quest.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Complete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-scroll fa-3x mb-3 text-warning"></i>
+                    <h3 class="text-warning">No Quests Found</h3>
+                    <p class="text-light">Time to embark on new adventures! Create a quest or adjust your filters.</p>
+                    <a href="{% url 'quest_create' %}" class="btn btn-warning btn-lg mt-3">
+                        <i class="fas fa-plus-circle"></i> Create New Quest
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Quest pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

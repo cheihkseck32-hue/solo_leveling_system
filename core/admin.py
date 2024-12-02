@@ -13,15 +13,23 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Goal)
 class GoalAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'goal_type', 'deadline', 'completed', 'progress')
-    list_filter = ('goal_type', 'completed')
-    search_fields = ('title', 'user__username')
+    list_display = ('title', 'user', 'goal_type', 'deadline', 'completion_percentage', 'total_quests_count')
+    list_filter = ('goal_type', 'deadline', 'created_at')
+    search_fields = ('title', 'description', 'user__username')
+    date_hierarchy = 'created_at'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
 
 @admin.register(Quest)
 class QuestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'difficulty', 'status', 'reward_xp', 'deadline')
-    list_filter = ('difficulty', 'status')
-    search_fields = ('title', 'user__username')
+    list_display = ('title', 'user', 'goal', 'difficulty', 'status', 'deadline')
+    list_filter = ('status', 'difficulty', 'created_at')
+    search_fields = ('title', 'description', 'user__username')
+    date_hierarchy = 'created_at'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'goal')
 
 @admin.register(Achievement)
 class AchievementAdmin(admin.ModelAdmin):
