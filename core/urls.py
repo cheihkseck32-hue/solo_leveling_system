@@ -35,6 +35,10 @@ urlpatterns = [
     path('community/post/<int:post_id>/', views.post_detail, name='post_detail'),
     path('community/post/<int:post_id>/edit/', views.post_edit, name='post_edit'),
     
+    # Store URLs
+    path('store/', views.store, name='store'),
+    path('purchase/<int:item_id>/', views.purchase_item, name='purchase_item'),
+    
     # Static Pages
     path('about/', views.about, name='about'),
     path('privacy/', views.privacy, name='privacy'),

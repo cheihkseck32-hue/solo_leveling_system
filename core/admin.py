@@ -77,8 +77,8 @@ class ModeAdmin(admin.ModelAdmin):
 
 @admin.register(ShopItem)
 class ShopItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'product_type', 'points_required', 'ad_required')
-    list_filter = ('product_type', 'ad_required')
+    list_display = ('name', 'item_type', 'price')
+    list_filter = ('item_type',)
     search_fields = ('name',)
 
 @admin.register(Exchange)

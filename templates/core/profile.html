@@ -1,0 +1,264 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Profile - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-lg border-0 rounded-lg glass-morphism">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        {% if user_profile.avatar %}
+                            <img src="{{ user_profile.avatar.url }}" alt="Profile Avatar" class="rounded-circle img-fluid" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'core/images/default_avatar.png' %}" alt="Default Avatar" class="rounded-circle img-fluid" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <h3 class="mb-2">{{ user_profile.user.username }}</h3>
+                    <p class="text-muted mb-3">{{ user_profile.title|default:"Hunter" }}</p>
+                    <div class="rank-badge mb-4">
+                        <span class="badge bg-primary">Rank {{ user_profile.rank }}</span>
+                        <span class="badge bg-info">Level {{ user_profile.level }}</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+                        <a href="{% url 'settings' %}" class="btn btn-outline-primary">Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character Stats and Equipped Items -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Character Stats</h5>
+                </div>
+                <div class="card-body">
+                    {% with total_stats=user_profile.get_total_stats %}
+                    {% with stat_differences=user_profile.get_stat_differences %}
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <i class="fas fa-fist-raised text-danger"></i>
+                            <span class="stat-label">Strength</span>
+                            <span class="stat-value">{{ total_stats.strength }}</span>
+                            {% if stat_differences.strength > 0 %}
+                            <small class="text-success">(+{{ stat_differences.strength }})</small>
+                            {% endif %}
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-brain text-primary"></i>
+                            <span class="stat-label">Intelligence</span>
+                            <span class="stat-value">{{ total_stats.intelligence }}</span>
+                            {% if stat_differences.intelligence > 0 %}
+                            <small class="text-success">(+{{ stat_differences.intelligence }})</small>
+                            {% endif %}
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-running text-success"></i>
+                            <span class="stat-label">Agility</span>
+                            <span class="stat-value">{{ total_stats.agility }}</span>
+                            {% if stat_differences.agility > 0 %}
+                            <small class="text-success">(+{{ stat_differences.agility }})</small>
+                            {% endif %}
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-heart text-danger"></i>
+                            <span class="stat-label">Vitality</span>
+                            <span class="stat-value">{{ total_stats.vitality }}</span>
+                            {% if stat_differences.vitality > 0 %}
+                            <small class="text-success">(+{{ stat_differences.vitality }})</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Equipped Items</h5>
+                </div>
+                <div class="card-body">
+                    {% with equipped_items=user_profile.get_equipped_items %}
+                    {% if equipped_items %}
+                    <div class="list-group equipped-items">
+                        {% for inv in equipped_items %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ inv.item.name }}</h6>
+                                <span class="badge bg-{{ inv.item.get_rarity_display|lower }}">
+                                    {{ inv.item.get_rarity_display }}
+                                </span>
+                            </div>
+                            {% if inv.item.effects %}
+                            <div class="mt-2">
+                                {% for effect, value in inv.item.effects.items %}
+                                <span class="badge bg-info me-1">{{ effect }}: +{{ value }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No items equipped</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats and Progress -->
+        <div class="col-lg-4">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Experience</h5>
+                            <p class="display-6">{{ total_xp }}</p>
+                            <p class="text-muted">Total XP</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Quests</h5>
+                            <p class="display-6">{{ completed_quests }}</p>
+                            <p class="text-muted">Completed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-lg glass-morphism">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Active</h5>
+                            <p class="display-6">{{ active_quests }}</p>
+                            <p class="text-muted">In Progress</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="card shadow-lg border-0 rounded-lg glass-morphism mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">About Me</h5>
+                    <p class="card-text">{{ user_profile.bio|default:"No bio yet..." }}</p>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="card shadow-lg border-0 rounded-lg glass-morphism">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Level Progress</h5>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-gradient"
+                             role="progressbar"
+                             style="width: {{ user_profile.level_progress }}%;"
+                             aria-valuenow="{{ user_profile.level_progress }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            {{ user_profile.level_progress }}%
+                        </div>
+                    </div>
+                    <p class="text-muted text-center">
+                        <span class="text-primary">{{ user_profile.experience }}</span> / 
+                        <span class="text-primary">{{ user_profile.get_next_level_xp }}</span> XP to next level
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.equipped-items .list-group-item {
+    transition: all 0.2s;
+}
+
+.equipped-items .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+    transition: all 0.2s;
+}
+
+.badge:hover {
+    transform: scale(1.1);
+}
+
+.glass-morphism {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.badge.bg-legendary {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.badge.bg-epic {
+    background-color: #dc3545;
+}
+
+.badge.bg-rare {
+    background-color: #0d6efd;
+}
+
+.badge.bg-uncommon {
+    background-color: #198754;
+}
+
+.badge.bg-common {
+    background-color: #6c757d;
+}
+</style>
+{% endblock %}

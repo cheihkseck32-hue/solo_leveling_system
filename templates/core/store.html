@@ -1,0 +1,169 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Store - Solo Leveling System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="text-light">Store</h1>
+                <div class="coins-display">
+                    <i class="fas fa-coins text-warning"></i>
+                    <span id="user-coins" class="ms-2">{{ user_coins }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for item in items %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 bg-dark bg-opacity-75 border border-light border-opacity-10">
+                <div class="card-header bg-transparent border-bottom border-light border-opacity-10">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-light">
+                            <i class="fas fa-{{ item.icon }} me-2"></i>
+                            {{ item.name }}
+                        </h5>
+                        <span class="badge bg-{{ item.rarity|lower }}">{{ item.get_rarity_display }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-light">{{ item.description }}</p>
+                    {% if item.stat_type %}
+                    <div class="stat-effect mb-3">
+                        <span class="text-light">
+                            <i class="fas fa-plus-circle text-success me-2"></i>
+                            {{ item.stat_increase }} {{ item.get_stat_type_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="text-warning">
+                            <i class="fas fa-coins me-2"></i>
+                            {{ item.price }}
+                        </span>
+                        <button class="btn btn-primary buy-item" data-item-id="{{ item.id }}"
+                                {% if user_coins < item.price %}disabled{% endif %}>
+                            {% if user_coins < item.price %}
+                                <i class="fas fa-lock me-2"></i>Not enough coins
+                            {% else %}
+                                <i class="fas fa-shopping-cart me-2"></i>Purchase
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.bg-common { background-color: #808080 !important; }
+.bg-uncommon { background-color: #2ecc71 !important; }
+.bg-rare { background-color: #3498db !important; }
+.bg-epic { background-color: #9b59b6 !important; }
+.bg-legendary { background-color: #f1c40f !important; }
+
+.card {
+    transition: transform 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-effect {
+    padding: 0.5rem;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buyButtons = document.querySelectorAll('.buy-item');
+    const userCoinsDisplay = document.getElementById('user-coins');
+
+    buyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            
+            fetch('/store/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `item_id=${itemId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update user's coins
+                    userCoinsDisplay.textContent = data.coins;
+                    
+                    // Show success message
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+
+                    // Update buttons based on new coin amount
+                    updateBuyButtons(data.coins);
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            });
+        });
+    });
+
+    function updateBuyButtons(userCoins) {
+        buyButtons.forEach(button => {
+            const price = parseInt(button.closest('.card-body').querySelector('.text-warning').textContent.trim());
+            if (userCoins < price) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-lock me-2"></i>Not enough coins';
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

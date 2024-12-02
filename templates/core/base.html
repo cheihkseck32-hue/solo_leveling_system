@@ -1,66 +1,117 @@
-{% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+{% load static %}
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Solo Leveling System{% endblock %}</title>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap CSS -->
+    <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- AOS CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/css/animations.css' %}">
+    <style>
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease-out;
+        }
+        
+        #loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Add margin-top to main content to prevent navbar overlap */
+        main {
+            margin-top: 72px; /* Adjust based on your navbar height */
+            min-height: calc(100vh - 72px - 80px); /* Subtract navbar and footer height */
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-dark">
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loading"></div>
+    </div>
+
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top glass-card">
         <div class="container">
-            <a class="navbar-brand glow-text" href="{% url 'home' %}">
-                <i class="fas fa-dragon me-2"></i>Solo Leveling
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <div class="icon-container bg-primary text-white me-2">
+                    <i class="fas fa-dragon"></i>
+                </div>
+                <span class="fw-bold">Solo Leveling</span>
             </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link hover-glow" href="{% url 'dashboard' %}">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
                                 <i class="fas fa-home me-1"></i>Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link hover-glow" href="{% url 'quest_list' %}">
+                            <a class="nav-link" href="{% url 'quest_list' %}">
                                 <i class="fas fa-scroll me-1"></i>Quests
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link hover-glow" href="{% url 'goal_list' %}">
-                                <i class="fas fa-bullseye me-1"></i>Goals
+                            <a class="nav-link" href="{% url 'store' %}">
+                                <i class="fas fa-store me-1"></i>Store
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle hover-glow" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                {% if user.userprofile.avatar %}
+                                    <img src="{{ user.userprofile.avatar.url }}" alt="Avatar" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-user-circle me-1"></i>
+                                {% endif %}
+                                {{ user.username }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark">
+                            <ul class="dropdown-menu dropdown-menu-end glass-card">
                                 <li>
                                     <a class="dropdown-item" href="{% url 'profile' %}">
-                                        <i class="fas fa-id-card me-2"></i>Profile
+                                        <i class="fas fa-user me-2"></i>Profile
                                     </a>
                                 </li>
                                 <li>
@@ -78,12 +129,12 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link hover-glow" href="{% url 'login' %}">
+                            <a class="nav-link" href="{% url 'login' %}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Login
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-primary shadow-pulse" href="{% url 'register' %}">
+                            <a class="nav-link btn btn-primary text-white px-3" href="{% url 'register' %}">
                                 <i class="fas fa-user-plus me-1"></i>Register
                             </a>
                         </li>
@@ -94,34 +145,51 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container py-5 mt-5">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            {% block content %}{% endblock %}
-        </div>
+    <main class="flex-shrink-0">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show glass-card" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="footer glass-morphism mt-auto py-4">
+    <footer class="footer mt-auto py-4 bg-white glass-card">
         <div class="container">
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h5 class="glow-text"><i class="fas fa-dragon me-2"></i>Solo Leveling</h5>
-                    <p class="text-muted">Level up your productivity, one quest at a time.</p>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-primary text-white me-3">
+                            <i class="fas fa-dragon"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">Solo Leveling System</h5>
+                            <small class="text-muted">Level up your life, one quest at a time</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="social-links">
-                        <a href="#" class="social-link hover-glow"><i class="fab fa-github"></i></a>
-                        <a href="#" class="social-link hover-glow"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link hover-glow"><i class="fab fa-discord"></i></a>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <div class="d-flex justify-content-md-end gap-3">
+                        <a href="#" class="text-dark">
+                            <div class="icon-container">
+                                <i class="fab fa-github"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-dark">
+                            <div class="icon-container">
+                                <i class="fab fa-twitter"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-dark">
+                            <div class="icon-container">
+                                <i class="fab fa-discord"></i>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -129,18 +197,33 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="{% static 'assets/js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-    
     <script>
+        // Initialize AOS
         AOS.init({
             duration: 800,
-            easing: 'ease-in-out',
             once: true
         });
+        
+        // Handle loading overlay
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading overlay when page is fully loaded
+            window.addEventListener('load', function() {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 300);
+            });
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

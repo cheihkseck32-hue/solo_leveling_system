@@ -9,11 +9,11 @@ import requests
 import json
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
-from .models import UserProfile, Quest, Goal, Achievement, CommunityPost, UserQuest
+from .models import UserProfile, Quest, Goal, Achievement, CommunityPost, UserQuest, ShopItem
 from .forms import (
     UserRegistrationForm, UserProfileForm, QuestForm,
     GoalForm, CommunityPostForm, UserSettingsForm, UserProfileSettingsForm, 
-    UserProfileEditForm, CommentForm, ContactForm
+    UserProfileEditForm, CommentForm, ContactForm, ProfileEditForm
 )
 from .services.ai_service import AIService
 
@@ -83,29 +83,49 @@ def dashboard(request):
         user=request.user, 
         status='completed',
         completed_at__isnull=False
-    ).select_related('goal').order_by('-updated_at')[:5]
+    ).select_related('goal').order_by('-completed_at')[:5]
+    
+    # Get recent achievements
+    recent_achievements = Achievement.objects.filter(
+        user=request.user,
+        unlocked_at__isnull=False
+    ).order_by('-unlocked_at')[:5]
     
     # Calculate statistics
     total_quests = Quest.objects.filter(user=request.user).count()
     completed_quest_count = Quest.objects.filter(user=request.user, status='completed').count()
     completion_rate = (completed_quest_count / total_quests * 100) if total_quests > 0 else 0
     
-    # Get active goals with progress
-    active_goals = goals.filter(
-        is_active=True
-    ).exclude(
-        deadline__lt=timezone.now()
-    ).order_by('-priority', '-created_at')[:5]
+    # Calculate daily quest limit
+    daily_quests_taken = user_profile.daily_quests_taken()
+    daily_quests_remaining = user_profile.daily_quest_limit - daily_quests_taken
+    
+    # Get equipped items and their effects
+    equipped_items = user_profile.get_equipped_items()
+    total_stats = user_profile.get_total_stats()
+    
+    # Calculate stat differences from base stats
+    stat_differences = {
+        'strength': total_stats['strength'] - user_profile.strength,
+        'agility': total_stats['agility'] - user_profile.agility,
+        'vitality': total_stats['vitality'] - user_profile.vitality,
+        'sense': total_stats['sense'] - user_profile.sense,
+        'intelligence': total_stats['intelligence'] - user_profile.intelligence,
+    }
     
     context = {
         'user_profile': user_profile,
         'active_quests': active_quests,
         'completed_quests': completed_quests,
-        'active_goals': active_goals,
+        'recent_achievements': recent_achievements,
         'total_quests': total_quests,
         'completed_quest_count': completed_quest_count,
         'completion_rate': round(completion_rate, 1),
         'xp_to_next_level': user_profile.xp_to_next_level(),
+        'daily_quests_remaining': daily_quests_remaining,
+        'equipped_items': equipped_items,
+        'total_stats': total_stats,
+        'stat_differences': stat_differences,
     }
     
     return render(request, 'core/dashboard.html', context)
@@ -322,18 +342,181 @@ def post_create(request):
     return render(request, 'core/post_form.html', {'form': form})
 
 @login_required
+def store(request):
+    items = ShopItem.objects.all()
+    user_profile = request.user.userprofile
+    
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        item_id = request.POST.get('item_id')
+        try:
+            item = ShopItem.objects.get(id=item_id)
+            if user_profile.coins >= item.price:
+                # Create the purchase transaction
+                user_profile.coins -= item.price
+                
+                # Add item to inventory
+                inventory = user_profile.inventory or []
+                inventory.append({
+                    'id': item.id,
+                    'name': item.name,
+                    'type': item.item_type,
+                    'rarity': item.rarity,
+                    'effect': item.effect,
+                    'icon': item.icon,
+                    'equipped': False,
+                    'purchased_at': timezone.now().isoformat()
+                })
+                user_profile.inventory = inventory
+                user_profile.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Successfully purchased {item.name}!',
+                    'coins': user_profile.coins,
+                    'inventory': inventory
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Not enough coins!'
+                }, status=400)
+        except ShopItem.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Item not found!'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=500)
+    
+    context = {
+        'items': items,
+        'user_coins': user_profile.coins,
+        'inventory': user_profile.inventory or []
+    }
+    return render(request, 'core/store.html', context)
+
+@login_required
+def purchase_item(request, item_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    try:
+        item = get_object_or_404(ShopItem, id=item_id)
+        user_profile = request.user.userprofile
+        
+        # Check if user has enough coins
+        if user_profile.coins < item.price:
+            return JsonResponse({
+                'success': False,
+                'error': 'Not enough coins to purchase this item'
+            })
+        
+        # Attempt to purchase the item
+        if item.purchase(user_profile):
+            # Create an achievement for first purchase if it doesn't exist
+            Achievement.objects.get_or_create(
+                user=request.user,
+                name='First Purchase',
+                defaults={
+                    'description': 'Made your first purchase from the store',
+                    'achievement_type': 'MILESTONE',
+                    'xp_reward': 50,
+                    'coin_reward': 10,
+                    'icon': 'shopping-bag',
+                    'unlocked_at': timezone.now()
+                }
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item purchased successfully',
+                'new_balance': user_profile.coins
+            })
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to purchase item'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
 def profile(request):
     user_profile = request.user.userprofile
-    completed_quests = Quest.objects.filter(user=request.user, status='COMPLETED').count()
-    active_quests = Quest.objects.filter(user=request.user, status='IN_PROGRESS').count()
-    total_xp = user_profile.experience + (user_profile.level - 1) * 100
+    total_stats = user_profile.get_total_stats()
+    equipped_items = user_profile.get_equipped_items()
+    
+    # Calculate stat differences from base stats
+    stat_differences = {
+        'strength': total_stats['strength'] - user_profile.strength,
+        'agility': total_stats['agility'] - user_profile.agility,
+        'vitality': total_stats['vitality'] - user_profile.vitality,
+        'sense': total_stats['sense'] - user_profile.sense,
+        'intelligence': total_stats['intelligence'] - user_profile.intelligence,
+    }
+    
+    # Get all achievements
+    achievements = Achievement.objects.filter(user=request.user).order_by('-unlocked_at')
+    
+    # Calculate achievement stats
+    total_achievements = achievements.count()
+    unlocked_achievements = achievements.filter(unlocked_at__isnull=False).count()
+    achievement_rate = (unlocked_achievements / total_achievements * 100) if total_achievements > 0 else 0
+    
+    # Get quest statistics
+    quest_stats = {
+        'total': Quest.objects.filter(user=request.user).count(),
+        'completed': Quest.objects.filter(user=request.user, status='completed').count(),
+        'failed': Quest.objects.filter(user=request.user, status='failed').count(),
+        'in_progress': Quest.objects.filter(user=request.user, status='in_progress').count(),
+    }
+    quest_stats['completion_rate'] = (quest_stats['completed'] / quest_stats['total'] * 100) if quest_stats['total'] > 0 else 0
+    
+    # Get goal statistics
+    goal_stats = {
+        'total': Goal.objects.filter(user=request.user).count(),
+        'active': Goal.objects.filter(user=request.user, is_active=True).count(),
+        'completed': Goal.objects.filter(user=request.user, is_active=False).filter(
+            quests__status='completed'
+        ).distinct().count(),
+    }
+    
+    # Get inventory statistics
+    inventory_stats = {
+        'total_items': len(user_profile.inventory),
+        'equipped_items': len(equipped_items),
+        'by_rarity': {},
+        'by_type': {},
+    }
+    
+    for item in user_profile.inventory:
+        rarity = item.get('rarity', 'common')
+        item_type = item.get('type', 'CONSUMABLE')
+        inventory_stats['by_rarity'][rarity] = inventory_stats['by_rarity'].get(rarity, 0) + 1
+        inventory_stats['by_type'][item_type] = inventory_stats['by_type'].get(item_type, 0) + 1
     
     context = {
         'user_profile': user_profile,
-        'completed_quests': completed_quests,
-        'active_quests': active_quests,
-        'total_xp': total_xp,
+        'total_stats': total_stats,
+        'stat_differences': stat_differences,
+        'equipped_items': equipped_items,
+        'achievements': achievements,
+        'achievement_rate': round(achievement_rate, 1),
+        'quest_stats': quest_stats,
+        'goal_stats': goal_stats,
+        'inventory_stats': inventory_stats,
+        'next_rank': user_profile.get_next_rank(),
+        'xp_progress': user_profile.level_progress,
+        'xp_needed': user_profile.xp_to_next_level(),
     }
+    
     return render(request, 'core/profile.html', context)
 
 @login_required
@@ -358,19 +541,18 @@ def settings(request):
 
 @login_required
 def profile_edit(request):
+    user_profile = request.user.userprofile
+    
     if request.method == 'POST':
-        form = UserProfileEditForm(request.POST, request.FILES, instance=request.user.userprofile)
+        form = ProfileEditForm(request.POST, request.FILES, instance=user_profile)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Your profile has been updated successfully!')
+            messages.success(request, 'Profile updated successfully!')
             return redirect('profile')
     else:
-        form = UserProfileEditForm(instance=request.user.userprofile)
+        form = ProfileEditForm(instance=user_profile)
     
-    context = {
-        'form': form,
-    }
-    return render(request, 'core/profile_edit.html', context)
+    return render(request, 'core/profile_edit.html', {'form': form})
 
 @login_required
 def goal_edit(request, goal_id):

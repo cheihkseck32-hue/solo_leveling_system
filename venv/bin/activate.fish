@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/sofiane/CascadeProjects/solo_leveling_system/venv"
+set -gx VIRTUAL_ENV "/home/sofiane/Desktop/SAAS/solo_leveling_system/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

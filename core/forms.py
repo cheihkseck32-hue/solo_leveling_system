@@ -136,6 +136,59 @@ class UserProfileEditForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'rows': 4})
         }
 
+class ProfileEditForm(forms.ModelForm):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        max_length=100
+    )
+    title = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        max_length=100
+    )
+    bio = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        required=False
+    )
+    avatar = forms.ImageField(
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+        required=False
+    )
+    # Make stats read-only
+    strength = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        required=False
+    )
+    agility = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        required=False
+    )
+    vitality = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        required=False
+    )
+    sense = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        required=False
+    )
+    intelligence = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        required=False
+    )
+    notification_preferences = forms.JSONField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ['name', 'title', 'bio', 'avatar', 'strength', 'agility', 
+                 'vitality', 'sense', 'intelligence', 'notification_preferences']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Add any custom validation here if needed
+        return cleaned_data
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
