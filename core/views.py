@@ -777,6 +777,31 @@ def logout_view(request):
     messages.success(request, 'You have been successfully logged out!')
     return redirect('home')
 
+@login_required
+def rankings(request):
+    """View for displaying various leaderboards"""
+    # Get top 10 players by level
+    top_by_level = UserProfile.objects.all().order_by('-level', '-experience')[:10]
+    
+    # Get top 10 players by each stat
+    top_by_strength = UserProfile.objects.all().order_by('-strength')[:10]
+    top_by_agility = UserProfile.objects.all().order_by('-agility')[:10]
+    top_by_vitality = UserProfile.objects.all().order_by('-vitality')[:10]
+    top_by_sense = UserProfile.objects.all().order_by('-sense')[:10]
+    top_by_intelligence = UserProfile.objects.all().order_by('-intelligence')[:10]
+    
+    context = {
+        'top_by_level': top_by_level,
+        'top_by_strength': top_by_strength,
+        'top_by_agility': top_by_agility,
+        'top_by_vitality': top_by_vitality,
+        'top_by_sense': top_by_sense,
+        'top_by_intelligence': top_by_intelligence,
+        'active_page': 'rankings'
+    }
+    
+    return render(request, 'core/rankings.html', context)
+
 # Helper Functions
 def analyze_personality(answers):
     """

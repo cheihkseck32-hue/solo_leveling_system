@@ -1,0 +1,195 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Level Rankings -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">Top Hunters by Level</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Hunter</th>
+                            <th>Level</th>
+                            <th>XP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for profile in top_by_level %}
+                        <tr>
+                            <td>#{{ forloop.counter }}</td>
+                            <td>{{ profile.user.username }}</td>
+                            <td>{{ profile.level }}</td>
+                            <td>{{ profile.experience }} XP</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Rankings -->
+    <div class="row">
+        <!-- Strength Rankings -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Top Strength</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Hunter</th>
+                                    <th>Strength</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in top_by_strength %}
+                                <tr>
+                                    <td>#{{ forloop.counter }}</td>
+                                    <td>{{ profile.user.username }}</td>
+                                    <td>{{ profile.strength }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agility Rankings -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Top Agility</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Hunter</th>
+                                    <th>Agility</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in top_by_agility %}
+                                <tr>
+                                    <td>#{{ forloop.counter }}</td>
+                                    <td>{{ profile.user.username }}</td>
+                                    <td>{{ profile.agility }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vitality Rankings -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Top Vitality</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Hunter</th>
+                                    <th>Vitality</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in top_by_vitality %}
+                                <tr>
+                                    <td>#{{ forloop.counter }}</td>
+                                    <td>{{ profile.user.username }}</td>
+                                    <td>{{ profile.vitality }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sense Rankings -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Top Sense</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Hunter</th>
+                                    <th>Sense</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in top_by_sense %}
+                                <tr>
+                                    <td>#{{ forloop.counter }}</td>
+                                    <td>{{ profile.user.username }}</td>
+                                    <td>{{ profile.sense }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intelligence Rankings -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Top Intelligence</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Hunter</th>
+                                    <th>Intelligence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in top_by_intelligence %}
+                                <tr>
+                                    <td>#{{ forloop.counter }}</td>
+                                    <td>{{ profile.user.username }}</td>
+                                    <td>{{ profile.intelligence }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

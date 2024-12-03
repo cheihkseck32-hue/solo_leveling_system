@@ -116,6 +116,11 @@
                                 <i class="fas fa-store me-1"></i>Store
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'rankings' %}active{% endif %}" href="{% url 'rankings' %}">
+                                <i class="fas fa-trophy"></i> Rankings
+                            </a>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                                 {% if user.userprofile.avatar %}

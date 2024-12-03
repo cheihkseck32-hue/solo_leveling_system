@@ -42,6 +42,9 @@ urlpatterns = [
     path('store/', views.store, name='store'),
     path('purchase/<int:item_id>/', views.purchase_item, name='purchase_item'),
     
+    # Rankings URL
+    path('rankings/', views.rankings, name='rankings'),
+    
     # Static Pages
     path('about/', views.about, name='about'),
     path('privacy/', views.privacy, name='privacy'),

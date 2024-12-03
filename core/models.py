@@ -60,13 +60,52 @@ class UserProfile(models.Model):
             models.Index(fields=['personality_type']),
         ]
     
+    def get_level_threshold(self, level):
+        """Calculate XP threshold for a given level
+        Level 1: 0 XP (starting point)
+        Level 2: 100 XP
+        Level 3: 400 XP (100 * 2²)
+        Level 4: 900 XP (100 * 3²)
+        """
+        if level <= 1:
+            return 0  # Level 1 starts at 0 XP
+        elif level == 2:
+            return 100  # Level 2 requires 100 XP
+        else:
+            return int(100 * ((level-1) ** 2))  # Quadratic increase for level 3 and above
+
+    def get_current_level_threshold(self):
+        """Get XP threshold for current level"""
+        return self.get_level_threshold(self.level)
+
+    def get_next_level_threshold(self):
+        """Get XP threshold for next level"""
+        return self.get_level_threshold(self.level + 1)
+
+    def get_xp_progress_in_level(self):
+        """Get the amount of XP earned in the current level"""
+        current_threshold = self.get_current_level_threshold()
+        return max(0, self.experience - current_threshold)
+
     @property
     def level_progress(self):
-        """Calculate the progress percentage to the next level"""
-        xp_for_current_level = self.level * 100
-        xp_for_next_level = (self.level + 1) * 100
-        current_level_xp = self.experience - xp_for_current_level
-        return int((current_level_xp * 100) / 100)  # Using 100 as each level needs 100 XP
+        """Calculate the progress percentage to the next level using the formula:
+        Progress = (Current XP - Current Level Threshold) / (Next Level Threshold - Current Level Threshold) * 100
+        """
+        current_threshold = self.get_current_level_threshold()
+        next_threshold = self.get_next_level_threshold()
+        xp_progress = self.get_xp_progress_in_level()
+        xp_needed = next_threshold - current_threshold
+        
+        if xp_needed == 0:  # Prevent division by zero
+            return 0
+            
+        progress = (xp_progress * 100) / xp_needed
+        return max(0, min(100, int(progress)))  # Ensure progress is between 0 and 100
+
+    def xp_to_next_level(self):
+        """Calculate remaining XP needed for next level"""
+        return self.get_next_level_threshold() - self.experience
 
     def get_current_level_xp(self):
         """Get XP progress in current level"""
@@ -80,10 +119,6 @@ class UserProfile(models.Model):
             total_xp += level * 100
         return total_xp
 
-    def xp_to_next_level(self):
-        """Calculate XP needed for next level"""
-        return self.level * 100
-
     def get_next_rank(self):
         """Get the next rank based on current rank"""
         current_rank_index = [choice[0] for choice in self.RANK_CHOICES].index(self.rank)
@@ -91,35 +126,41 @@ class UserProfile(models.Model):
             return self.RANK_CHOICES[current_rank_index + 1][1]
         return self.RANK_CHOICES[-1][1]  # Return highest rank if already at max
 
+    def calculate_level(self):
+        """Calculate the correct level based on current XP"""
+        level = 1
+        while self.experience >= self.get_level_threshold(level + 1):
+            level += 1
+        return level
+
     def add_experience(self, amount):
         """Add experience points and handle level ups"""
         self.experience += amount
-        while self.experience >= self.xp_to_next_level():
+        new_level = self.calculate_level()
+        
+        # If level increased, handle level up effects
+        while self.level < new_level:
+            self.level += 1
             self.level_up()
 
     def level_up(self):
         """Handle level up logic"""
-        self.level += 1
-        # Update rank based on level
-        if self.level >= 50:
-            self.rank = 'S'
-        elif self.level >= 40:
-            self.rank = 'A'
-        elif self.level >= 30:
-            self.rank = 'B'
-        elif self.level >= 20:
-            self.rank = 'C'
-        elif self.level >= 10:
-            self.rank = 'D'
-        elif self.level >= 5:
-            self.rank = 'E'
-        self.daily_quest_limit = min(self.daily_quest_limit + 1, 10)
+        # Award level up bonuses
+        self.coins += self.level * 50  # Award coins based on new level
+        
+        # Increase base stats
+        self.strength += 1
+        self.agility += 1
+        self.vitality += 1
+        self.sense += 1
+        self.intelligence += 1
+        
+        # Save changes
         self.save()
 
     def gain_experience(self, amount):
-        self.experience += amount
-        while self.experience >= self.xp_to_next_level():
-            self.level_up()
+        """Add experience and save"""
+        self.add_experience(amount)
         self.save()
 
     def complete_quest(self, quest):

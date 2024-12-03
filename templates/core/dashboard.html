@@ -30,7 +30,9 @@
                             {{ user_profile.level_progress }}%
                         </div>
                     </div>
-                    <small class="text-muted">{{ user_profile.get_current_level_xp }} XP / 100 XP to Next Level</small>
+                    <small class="text-muted">{{ user_profile.experience }} XP / {{ user_profile.get_next_level_threshold }} XP to Next Level</small>
+                    <br>
+                    <small class="text-muted">Level Progress: {{ user_profile.get_xp_progress_in_level }} XP in current level</small>
                 </div>
             </div>
         </div>
