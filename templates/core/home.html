@@ -7,7 +7,7 @@
 <style>
 .hero-section {
     min-height: 100vh;
-    background: linear-gradient(135deg, #1a1f2c 0%, #2d364c 100%);
+    background: #ffffff ;
     position: relative;
     overflow: hidden;
 }
@@ -22,14 +22,14 @@
 .hero-title {
     font-size: 4rem;
     font-weight: 800;
-    color: #fff;
+    color: #22194b;
     margin-bottom: 1.5rem;
     animation: fadeInUp 1s ease-out;
 }
 
 .hero-subtitle {
     font-size: 1.5rem;
-    color: #a8b2d1;
+    color: #344575;
     margin-bottom: 2.5rem;
     animation: fadeInUp 1s ease-out 0.2s;
     animation-fill-mode: both;
@@ -66,32 +66,34 @@
 }
 
 .feature-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: #585a5f;
     border-radius: 15px;
     padding: 2rem;
     text-align: center;
-    transition: transform 0.3s ease;
-    backdrop-filter: blur(10px);
+    /* transition: transform 0.3s ease; */
+    /* backdrop-filter: blur(10px); */
 }
 
 .feature-card:hover {
     transform: translateY(-10px);
+    background: #747577;
+
 }
 
 .feature-icon {
     font-size: 2.5rem;
-    color: #2196f3;
+    color: #bec1c4;
     margin-bottom: 1.5rem;
 }
 
 .feature-card h3 {
-    color: #fff;
+    color: #babcc2;
     font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
 .feature-card p {
-    color: #a8b2d1;
+    color: #85878f;
 }
 
 .particles {
@@ -113,14 +115,14 @@
     }
 }
 
-.wave-animation {
+/* .wave-animation {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     overflow: hidden;
     line-height: 0;
-}
+} */
 
 .wave-animation svg {
     position: relative;
@@ -130,7 +132,7 @@
 }
 
 .wave-animation .shape-fill {
-    fill: #FFFFFF;
+    fill: #fff;
 }
 
 .about-section {
@@ -148,13 +150,14 @@
 }
 
 .about-card {
+    background: #dedee0 ;
     text-align: center;
     padding: 2rem;
 }
 
 .about-icon {
     font-size: 3rem;
-    color: #2196f3;
+    color: #082e4d;
     margin-bottom: 1.5rem;
 }
 </style>
@@ -169,7 +172,7 @@
         {% if not user.is_authenticated %}
         <div class="hero-actions">
             <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-3">Start Your Quest</a>
-            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Continue Journey</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg">Continue Journey</a>
         </div>
         {% else %}
         <div class="hero-actions">
@@ -201,27 +204,30 @@
         </div>
     </div>
 
-    <div class="wave-animation">
-        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
-        </svg>
-    </div>
-</div>
 
+</div>
+<div class="wave-animation">
+    <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+    </svg>
+</div>
 <div class="about-section">
+
     <div class="about-grid">
+
         <div class="about-card">
+
             <i class="fas fa-code about-icon"></i>
             <h3>Created by DevMaghreb</h3>
             <p>A product of DevMaghreb, your trusted development agency specializing in innovative web solutions.</p>
             <div class="social-links mt-4">
-                <a href="https://www.instagram.com/devmagheb" class="btn btn-outline-primary me-2" target="_blank">
-                    <i class="fab fa-instagram"></i>
+                <a href="https://www.instagram.com/devmagheb" class="btn btn-outline-secondary me-2" target="_blank">
+                    <i class="fab fa-instagram  dark"></i>
                 </a>
-                <a href="https://www.tiktok.com/@devmaghreb" class="btn btn-outline-primary me-2" target="_blank">
-                    <i class="fab fa-tiktok"></i>
+                <a href="https://www.tiktok.com/@devmaghreb" class="btn btn-outline-secondary me-2" target="_blank">
+                    <i class="fab fa-tiktok "></i>
                 </a>
-                <a href="https://devmaghreb.vercel.app" class="btn btn-outline-primary" target="_blank">
+                <a href="https://devmaghreb.vercel.app" class="btn btn-outline-secondary" target="_blank">
                     <i class="fas fa-globe"></i>
                 </a>
             </div>
@@ -231,10 +237,10 @@
             <h3>Developer</h3>
             <p>Developed by Soufiane Majdar, a passionate web developer specializing in Django and React.</p>
             <div class="social-links mt-4">
-                <a href="https://github.com/Soufiane-Majdar" class="btn btn-outline-primary me-2" target="_blank">
+                <a href="https://github.com/Soufiane-Majdar" class="btn btn-outline-secondary me-2" target="_blank">
                     <i class="fab fa-github"></i>
                 </a>
-                <a href="mailto:soufiane.majdar@gmail.com" class="btn btn-outline-primary">
+                <a href="mailto:soufiane.majdar@gmail.com" class="btn btn-outline-secondary">
                     <i class="fas fa-envelope"></i>
                 </a>
             </div>

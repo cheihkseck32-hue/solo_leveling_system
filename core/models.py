@@ -63,14 +63,26 @@ class UserProfile(models.Model):
     @property
     def level_progress(self):
         """Calculate the progress percentage to the next level"""
-        xp_for_next_level = self.xp_to_next_level()
-        xp_from_last_level = self.level * 100  # Base XP needed for current level
-        current_level_xp = self.experience - xp_from_last_level
-        return min(100, int((current_level_xp / xp_for_next_level) * 100))
+        xp_for_current_level = self.level * 100
+        xp_for_next_level = (self.level + 1) * 100
+        current_level_xp = self.experience - xp_for_current_level
+        return int((current_level_xp * 100) / 100)  # Using 100 as each level needs 100 XP
+
+    def get_current_level_xp(self):
+        """Get XP progress in current level"""
+        xp_for_current_level = self.level * 100
+        return self.experience - xp_for_current_level
+
+    def xp_for_current_level(self):
+        """Calculate total XP needed up to current level"""
+        total_xp = 0
+        for level in range(1, self.level):
+            total_xp += level * 100
+        return total_xp
 
     def xp_to_next_level(self):
         """Calculate XP needed for next level"""
-        return (self.level + 1) * 100
+        return self.level * 100
 
     def get_next_rank(self):
         """Get the next rank based on current rank"""

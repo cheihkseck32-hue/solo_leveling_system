@@ -121,7 +121,7 @@ def dashboard(request):
         'total_quests': total_quests,
         'completed_quest_count': completed_quest_count,
         'completion_rate': round(completion_rate, 1),
-        'xp_to_next_level': user_profile.xp_to_next_level(),
+        'xp_to_next_level': (user_profile.level + 1) * 100,  # XP needed for next level
         'daily_quests_remaining': daily_quests_remaining,
         'equipped_items': equipped_items,
         'total_stats': total_stats,
@@ -249,6 +249,63 @@ def quest_start(request, quest_id):
         messages.info(request, f'Started quest: {quest.title}')
     
     return redirect('dashboard')
+
+@login_required
+def delete_quest(request, quest_id):
+    if request.method == 'POST':
+        try:
+            quest = Quest.objects.get(id=quest_id, user=request.user)
+            quest.delete()
+            return JsonResponse({'success': True})
+        except Quest.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Quest not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def update_quest(request, quest_id):
+    if request.method == 'POST':
+        try:
+            quest = Quest.objects.get(id=quest_id, user=request.user)
+            # Create form instance without files since we don't handle file uploads
+            form = QuestForm(request.POST, instance=quest, user=request.user)
+            if form.is_valid():
+                updated_quest = form.save()
+                # Format the deadline properly
+                deadline_str = None
+                if updated_quest.deadline:
+                    deadline_str = updated_quest.deadline.strftime('%Y-%m-%d %H:%M')
+                
+                return JsonResponse({
+                    'success': True,
+                    'quest': {
+                        'id': updated_quest.id,
+                        'title': updated_quest.title,
+                        'description': updated_quest.description,
+                        'difficulty': updated_quest.get_difficulty_display(),
+                        'deadline': deadline_str,
+                        'status': updated_quest.status,
+                    }
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid form data',
+                    'errors': form.errors
+                })
+        except Quest.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Quest not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    }, status=405)
 
 @login_required
 def goal_list(request):

@@ -22,6 +22,8 @@ urlpatterns = [
     path('quests/<int:quest_id>/complete/', views.quest_complete, name='quest_complete'),
     path('quests/<int:quest_id>/start/', views.quest_start, name='quest_start'),
     path('quests/<int:quest_id>/fail/', views.quest_fail, name='quest_fail'),
+    path('quests/<int:quest_id>/delete/', views.delete_quest, name='delete_quest'),
+    path('quests/<int:quest_id>/update/', views.update_quest, name='update_quest'),
     
     # Goal URLs
     path('goals/', views.goal_list, name='goal_list'),
